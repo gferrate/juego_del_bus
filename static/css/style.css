@@ -1,0 +1,75 @@
+@font-face {
+    font-family: rockSalt;
+    src: url(../fonts/font.woff2);
+}
+
+@font-face {
+    font-family: specialElite;
+    src: url(../fonts/font_2.woff2);
+}
+
+@font-face {
+    font-family: sigmarOne;
+    src: url(../fonts/font_3.woff2);
+}
+
+@font-face {
+    font-family: montserratLocal;
+    src: url(../fonts/montserrat.woff2);
+}
+
+@font-face {
+    font-family: antonLocal;
+    src: url(../fonts/anton.woff2);
+}
+
+* {
+    //font-family: 'Sigmar One', cursive;
+    //font-family: 'Montserrat', sans-serif;
+    font-family: 'antonLocal', sans-serif;
+    font-weight: lighter;
+}
+
+body {
+    overflow: hidden;
+    animation: bg-color 60s infinite ease-in-out
+}
+
+h1 {
+    font-family: 'sigmarOne';
+}
+
+.menu {
+    text-align: center;
+    height: 100vh;
+}
+
+.menu-w-1 {
+    width: 18rem;
+}
+
+.h-center {
+    margin: auto;
+}
+
+.v-center {
+    margin-top: 30vh;
+}
+
+@keyframes bg-color {
+    0% {
+        background-color: rgb(25, 200, 100, 50);
+    }
+    25% {
+        background-color: rgb(200, 100, 50, 50);
+    }
+    50% {
+        background-color: rgb(200, 230, 20, 50);
+    }
+    75% {
+        background-color: rgb(100, 40, 200, 50);
+    }
+    100% {
+        background-color: rgb(25, 200, 100, 50);
+    }
+}

@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" type="text/css" href="static/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="static/css/style.css">
+    <!--<link href="https://fonts.googleapis.com/css?family=Rock+Salt&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Sigmar+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">-->
+    <!--<link href="https://fonts.googleapis.com/css?family=Anton&display=swap&subset=latin-ext" rel="stylesheet">-->
+
+
+    <!--<script src="static/js/bootstrap.js"></script>-->
+    <script src="static/js/jquery.min.js"></script>
+    <script src="static/js/script.js"></script>
+    <title>El juego del bus</title>
+</head>
+
+<body>
+    <nav class="navbar static-top sticky-top">
+        <div class="container">
+            <a id="nav-username"></a>
+        </div>
+    </nav>
+
+    <div id="menu" class="menu h-center v-center menu-w-1">
+        <div id="menu-content-init">
+            <h1>El juego del bus</h1>
+            <div id="menu-name" class="input-group mb-3">
+                <input id="menu-username" type="text" class="form-control" aria-label="Default"
+                    aria-describedby="inputGroup-sizing-default" placeholder="Tu nombre">
+            </div>
+            <button id="menu-create" type="button" class="btn btn-dark">Crear sala</button>
+            <button id="menu-join" type="button" class="btn btn-dark">Unirse a una sala</button>
+        </div>
+        <div id="menu-content-create" hidden>
+            <h1>Código: 638156</h1>
+            <h2>Esperando a jugadores...
+                <h2>
+                    <button id="menu-start-game" type="button" class="btn btn-dark">Empezar</button>
+        </div>
+        <div id="menu-content-join" hidden>
+            <h1>Unirse a una sala</h1>
+            <div class="input-group mb-3">
+                <input id="menu-username" type="text" class="form-control" aria-label="Default"
+                    aria-describedby="inputGroup-sizing-default" placeholder="Inserta codigo de sala">
+            </div>
+            <button id="menu-join-btn" type="button" class="btn btn-dark">Unirse</button>
+        </div>
+    </div>
+    <div id="questions" class="h-center v-center">
+    </div>
+</body>
+
+</html>
