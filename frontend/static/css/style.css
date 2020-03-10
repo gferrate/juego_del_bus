@@ -56,8 +56,16 @@ h1 {
     margin-top: 30vh;
 }
 
+.v-center-2 {
+    margin-top: 15vh;
+}
+
 .card {
     width: 15rem;
+}
+
+.btn-width {
+    width: 8rem;
 }
 
 @keyframes bg-color {

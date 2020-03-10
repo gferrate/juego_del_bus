@@ -9,15 +9,21 @@
          '9S', 'AC', 'AD', 'AH', 'AS', 'JC', 'JD', 'JH', 'JS', 'KC', 'KD', 'KH',
          'KS', 'QC', 'QD', 'QH', 'QS'
      ];
-     var socket = new WebSocket('ws://localhost:7777');
+     var socket = new WebSocket('ws://192.168.1.130:7777');
      socket.onopen = function() {
          console.log('Connected!');
      };
      socket.onmessage = function(event) {
          let dataReceived = JSON.parse(event.data);
          console.log(dataReceived);
-         if (dataReceived.action == 'notify_players'){
+         action = dataReceived.action;
+         if (action == 'notify_players'){
              notifyPlayers(dataReceived.players);
+         }else if(action == 'show_turn'){
+             msg = dataReceived.msg;
+             turn = dataReceived.turn;
+             $('#question').html('Turno de ' + turn);
+             setTimeout(() => { $('#question').html(msg); }, 2000);
          }
      };
      socket.onclose = function() {
@@ -27,7 +33,9 @@
          console.log('error');
      };
 
-
+     function send(msg){
+         socket.send(JSON.stringify(msg));
+     }
 
      ///    MENU STUFF    ///
      $('#menu-create').on('click', function() {
@@ -38,6 +46,11 @@
          $('#menu-content-create').attr('hidden', false);
          $('#menu').removeClass('menu-w-1');
          $('#nav-username').html(username);
+         socket.send(JSON.stringify({
+             'action': 'create_room',
+             'room': room_number,
+             'username': username
+         }));
      });
 
      $('#menu-join').click(function() {
@@ -60,13 +73,16 @@
 
      $('#menu-start-game').click(function() {
          $('#menu').attr('hidden', true);
-         socket.send(JSON.stringify({
-             'action': 'create_room',
+         $('#questions').attr('hidden', false);
+         send({
+             'action': 'start_game',
              'room': room_number,
              'username': username
-         }));
+         });
      });
      ///    MENU STUFF    ///
+
+
      $('#test').click(function() {
          socket.send(JSON.stringify({
              'action': 'send_message',
