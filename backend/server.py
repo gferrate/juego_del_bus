@@ -6,10 +6,11 @@ from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado.websocket import websocket_connect
 import ssl
-
 import json
 import logging
 import random
+from ratelimit import limits
+
 
 log = logging.getLogger('')
 
@@ -18,46 +19,117 @@ class Game():
 
     def __init__(self):
         self.players = []
+        self.n_players = 0
         self.states = ['color', 'bigger', 'between', 'suits', 'bus']
         self.state = self.states[0]
-        self.rounds = {}
+        self.sips = {}
         self.turn_number = 0
+        self.question_id = None
+        self.total_turns = None
+        self.questions = [
+            '¿Rojo o Negro?',
+            '¿Arriba o abajo?',
+            '¿Entre medio o fuera?',
+            '¿Palo?'
+        ]
         self.turn = None
-        self.cards = [
+        cards = [
             '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D',
             '3H', '3S', '4C', '4D', '4H', '4S', '5C', '5D', '5H', '5S', '6C',
             '6D', '6H', '6S', '7C', '7D', '7H', '7S', '8C', '8D', '8H', '8S',
             '9C', '9D', '9H', '9S', 'AC', 'AD', 'AH', 'AS', 'JC', 'JD', 'JH',
             'JS', 'KC', 'KD', 'KH', 'KS', 'QC', 'QD', 'QH', 'QS'
         ]
-        self.remaining_cards = self.cards
+        self.remaining_cards = cards
+        self.current_card = None
 
     def add_player(self, username):
+        if username in self.players:
+            raise Exception('Player already in room')
         self.players.append(username)
 
     def start(self):
-        self.turn_number += 1
-        self.rounds = {k: {} for k in self.players}
-        self.turn = self.players[(self.turn_number - 1) % len(self.players)]
+        self.n_players = len(self.players)
+        self.sips = {k: {'sent': 0, 'received': 0}  for k in self.players}
+        self.turn = self.players[(self.turn_number - 1) % self.n_players]
+        self.total_turns = 4 * self.n_players + 1
 
     def next_turn(self):
-        if self.turn_number == 1:
-            turn = self.turn
-            msg = '¿Blanco o negro?'
-            return {'action': 'show_turn', 'turn': turn, 'msg': msg}
-        if self.turn > 0 and (self.turn_number % len(self.players)) == 0:
+        if self.turn_number / 4 <= self.n_players:
+            # rojo o negro
+            self.question_id = 0
+            msg = self.questions[self.question_id]
+            self.turn_number += 1
+            return {
+                'action': 'show_turn',
+                'turn': self.turn,
+                'msg': msg,
+                'question_id': self.question_id
+            }
+        elif self.turn_number / 4 <= 2 * self.n_players:
+            pass
+        if self.turn > 0 and (self.turn_number % self.n_players) == 0:
             pass
         pass
 
+    def get_letter_from_card(self, card):
+        for c in card:
+            if c.isalpha():
+                return c
+
+    def is_red(self, card):
+        return True
+        letter = self.get_letter_from_card(card)
+        if letter in ('H', 'D'):
+            return True
+        return False
+
+    def answer(self, username, answer_id):
+        if self.question_id == 0:
+            # 0: red, 1: black
+            card = self.pick_random_card()
+            print(card)
+            if ((self.is_red and answer_id == 0) or
+                    (not self.is_red and answer_id == 1)):
+                is_correct = True
+                msg = 'Correcto, puedes enviar un sorbo'
+                msg_2 = 'A quien le quieres enviar?'
+            elif ((self.is_red and answer_id == 1) or
+                    (not self.is_red and answer_id == 0)):
+                is_correct = False
+                msg = 'Incorrecto, bebes un sorbo'
+                msg_2 = None
+            return {
+                'action': 'answer_action',
+                'card': card,
+                'turn': self.turn,
+                'is_correct': True,
+                'msg': msg,
+                'msg_2': msg_2,
+                'players': self.players
+            }
+        # 0: up, 1: down
+        # 0: medio, 1: fuera
+        # 0: corazon, 1: rombos, 2: picas, 3: trevoles
+
     def get_turn(self):
         return self.turn
+
+    def send_sip(self, username, to, amount):
+        self.sips[username]['sent'] += 1
+        self.sips[to]['received'] += 1
+        msg = f'{to} bebe {amount} sorbo'
+        if amount > 1:
+            msg += 's'
+        return {'action': 'notify_sip', 'victim': to, 'msg': msg}
 
     def get_turn_number(self):
         return self.turn_number
 
     def pick_random_card(self):
         card = random.choice(self.remaining_cards)
-        self.remaining_cards.pop(card)
+        self.remaining_cards.remove(card)
+        return card
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -69,10 +141,11 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         log.info('Connection to client opened')
 
+    @limits(calls=2, period=1)
     def notify_players_in_room(self, room, msg='test'):
         print(msg)
         if msg == 'test':
-            players = [p['username'] for p in self.rooms[room]]
+            players = [p['username'] for p in self.rooms[room]['players']]
             msg = json.dumps({'action': 'notify_players', 'players': players})
             for r in self.rooms[room]['players']:
                 r['ws'].write_message(msg)
@@ -110,9 +183,32 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 self.notify_players_in_room(
                     room, self.rooms[room]['game'].next_turn()
                 )
+            elif action == 'answer':
+                self.notify_players_in_room(
+                    room,
+                    self.rooms[room]['game'].answer(
+                        username, data['answer_id']
+                    )
+                )
+            elif action == 'next_question':
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].next_turn()
+                )
+
+            elif action == 'send_sip':
+                self.notify_players_in_room(
+                    room,
+                    self.rooms[room]['game'].send_sip(
+                        username, data['to'], amount
+                    )
+                )
+                print(self.rooms[room]['game'].sips)
             else:
                 pass
         except Exception as e:
+            print('\n\nERROR')
+            print(e)
+            print('\n\n')
             log.exception(e)
             raise
 

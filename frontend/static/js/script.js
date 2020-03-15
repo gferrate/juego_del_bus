@@ -1,6 +1,9 @@
  $(document).ready(function() {
      var username;
+     var current_question = 0;
      var room_number;
+     var players;
+     var status = 'not_answered'
      //clubs (♣), diamonds (♦), hearts (♥) and spades (♠),
      var cards = [
          '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D', '3H',
@@ -17,13 +20,41 @@
          let dataReceived = JSON.parse(event.data);
          console.log(dataReceived);
          action = dataReceived.action;
-         if (action == 'notify_players'){
+         if (action == 'notify_players') {
+             players = dataReceived.players;
              notifyPlayers(dataReceived.players);
-         }else if(action == 'show_turn'){
+         } else if (action == 'show_turn') {
+             $('#menu').attr('hidden', true);
+             $('#questions').attr('hidden', false);
+             showCard('back');
              msg = dataReceived.msg;
              turn = dataReceived.turn;
+             enableButtons();
              $('#question').html('Turno de ' + turn);
-             setTimeout(() => { $('#question').html(msg); }, 2000);
+             $('#question-2').html(msg);
+             showNButtons(2);
+             if (turn != username) {
+                 disableButtons();
+             }
+         } else if (action == 'answer_action') {
+             msg = dataReceived.msg;
+             msg_2 = dataReceived.msg_2;
+             turn = dataReceived.turn;
+             card = dataReceived.card;
+             hideButtons();
+             if (turn == username) {
+                 $('#question').html('Continuar');
+             }
+             $('#question').html(msg);
+             $('#question-2').html(msg_2 || '');
+             document.querySelector("#card").classList.toggle("flip-scale-down-diag-2")
+             showCard(card);
+             addPlayersToButtons(dataReceived.players);
+             status = 'answered'
+         } else if (action == 'notify_players') {
+             players = dataReceived.players;
+         } else if (action == 'answered') {
+             //pass
          }
      };
      socket.onclose = function() {
@@ -33,8 +64,68 @@
          console.log('error');
      };
 
-     function send(msg){
+     function send(msg) {
+         msg['room'] = room_number
+         msg['username'] = username
          socket.send(JSON.stringify(msg));
+     }
+
+     function disableButtons() {
+         $("#answer-0").addClass('disabled');
+         $("#answer-1").addClass('disabled');
+         $("#answer-2").addClass('disabled');
+         $("#answer-3").addClass('disabled');
+         $("#answer-4").addClass('disabled');
+         $("#answer-5").addClass('disabled');
+     }
+
+     function enableButtons() {
+         $("#answer-0").removeClass('disabled');
+         $("#answer-1").removeClass('disabled');
+         $("#answer-2").removeClass('disabled');
+         $("#answer-3").removeClass('disabled');
+         $("#answer-4").removeClass('disabled');
+         $("#answer-5").removeClass('disabled');
+     }
+
+     function hideButtons() {
+         $("#answer-0").attr('hidden', true);
+         $("#answer-1").attr('hidden', true);
+         $("#answer-2").attr('hidden', true);
+         $("#answer-3").attr('hidden', true);
+         $("#answer-4").attr('hidden', true);
+         $("#answer-5").attr('hidden', true);
+     }
+
+     function showButtons() {
+         $("#answer-0").attr('hidden', false);
+         $("#answer-1").attr('hidden', false);
+         $("#answer-2").attr('hidden', false);
+         $("#answer-3").attr('hidden', false);
+         $("#answer-4").attr('hidden', false);
+         $("#answer-5").attr('hidden', false);
+     }
+
+     function showNButtons(n) {
+         for (idx = 0; idx++; idx < n) {
+             let id = `#answer-${idx}`;
+             $(id).attr('hidden', true);
+         }
+     }
+
+     function addPlayersToButtons(players) {
+         players_filtered = players.filter(e => e !== username);
+         hideButtons();
+         for (idx in players_filtered) {
+             let id = `#answer-${idx}`;
+             $(id).html(players[idx]);
+             $(id).attr('hidden', false);
+         }
+     }
+
+     function showCard(card) {
+         src = `static/img/deck/${card}.png`;
+         $("#card").attr("src", src);
      }
 
      ///    MENU STUFF    ///
@@ -73,11 +164,8 @@
 
      $('#menu-start-game').click(function() {
          $('#menu').attr('hidden', true);
-         $('#questions').attr('hidden', false);
          send({
-             'action': 'start_game',
-             'room': room_number,
-             'username': username
+             'action': 'start_game'
          });
      });
      ///    MENU STUFF    ///
@@ -91,18 +179,72 @@
          }));
      });
 
+     $('#answer-0').on('click', function() {
+         if ($(this).hasClass('disabled')) {
+             return
+         }
+         if (current_question == 0) {
+             if (status == 'not_answered') {
+                 send({
+                     'action': 'answer',
+                     'question_id': 0,
+                     'answer_id': 0 // BLACK
+                 })
+             } else if (status == 'answered') {
+                 send({
+                     'action': 'send_sip',
+                     'amount': 1,
+                     'to': $(this).html()
+                 })
+                 status = 'sip_send';
+             } else if (status == 'sip_send') {
+                 send({
+                     'action': 'next_question'
+                 })
+             }
+         }
+     });
+
+     $('#answer-1').on('click', function() {
+         if ($(this).hasClass('disabled')) {
+             return
+         }
+         if (current_question == 0) {
+             if (status == 'not_answered') {
+                 send({
+                     'action': 'answer',
+                     'question_id': 0,
+                     'answer_id': 1 // BLACK
+                 })
+             } else if (status == 'answered') {
+                 send({
+                     'action': 'send_sip',
+                     'to': $(this).html(),
+                     'amount': 1
+                 })
+                 status = 'sip_send';
+             } else {
+                 send({
+                     'action': 'next_question'
+                 })
+             }
+         }
+     });
+
      /// IMAGES ///
      /// IMAGES ///
 
      function getRandomCard() {
          return cards[Math.floor(Math.random() * 52)]
      }
-     function notifyPlayers(players){
+
+     function notifyPlayers(players) {
          $('#players-in-room').html('Jugadores: ' + players.join(', '));
      }
-     function generateRandomCode(){
+
+     function generateRandomCode() {
          var code = '';
-         for (j = 0; j < 6; j++){
+         for (j = 0; j < 6; j++) {
              code += Math.floor(Math.random() * 9).toString();
          }
          return code;
