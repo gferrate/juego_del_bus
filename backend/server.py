@@ -227,8 +227,8 @@ if __name__ == "__main__":
         )
         #ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         #ssl_ctx.load_cert_chain(
-        #    "/etc/ssl/certs/_wildcard_.bmat.com_2019-2021_good.crt",
-        #    "/etc/ssl/private/_wildcard_.bmat.com_2017-2019.key"
+        #    "/etc/ssl/certs/cert.crt",
+        #    "/etc/ssl/private/key.key"
         #)
         application = tornado.web.Application([(r'/', WSHandler),])
         http_server = tornado.httpserver.HTTPServer(
