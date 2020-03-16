@@ -55,22 +55,32 @@ class Game():
         self.total_turns = 4 * self.n_players + 1
 
     def next_turn(self):
+        self.turn = self.players[(self.turn_number - 1) % self.n_players]
+        print('Turn:', self.turn)
         if self.turn_number / 4 <= self.n_players:
             # rojo o negro
             self.question_id = 0
             msg = self.questions[self.question_id]
-            self.turn_number += 1
-            return {
+            to_return = {
                 'action': 'show_turn',
+                'btn_0_text': 'ROJO',
+                'btn_1_text': 'NEGRO',
                 'turn': self.turn,
                 'msg': msg,
                 'question_id': self.question_id
             }
-        elif self.turn_number / 4 <= 2 * self.n_players:
+        elif (self.turn_number / 4) <= (2 * self.n_players):
+            to_return = {
+                'action': 'show_turn',
+                'btn_0_text': 'ROJO',
+                'btn_1_text': 'NEGRO',
+                'turn': self.turn,
+                'msg': 'TEEEEEEEEESSSSSSSSSSSSSSSSSSSSt',
+                'question_id': self.question_id
+            }
             pass
-        if self.turn > 0 and (self.turn_number % self.n_players) == 0:
-            pass
-        pass
+        self.turn_number += 1
+        return to_return
 
     def get_letter_from_card(self, card):
         for c in card:
@@ -194,12 +204,11 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 self.notify_players_in_room(
                     room, self.rooms[room]['game'].next_turn()
                 )
-
             elif action == 'send_sip':
                 self.notify_players_in_room(
                     room,
                     self.rooms[room]['game'].send_sip(
-                        username, data['to'], amount
+                        username, data['to'], data['amount']
                     )
                 )
                 print(self.rooms[room]['game'].sips)

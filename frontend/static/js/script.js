@@ -26,6 +26,8 @@
          } else if (action == 'show_turn') {
              $('#menu').attr('hidden', true);
              $('#questions').attr('hidden', false);
+             $('#answer-0').html(dataReceived.btn_0_text);
+             $('#answer-1').html(dataReceived.btn_1_text);
              showCard('back');
              msg = dataReceived.msg;
              turn = dataReceived.turn;
@@ -55,6 +57,18 @@
              players = dataReceived.players;
          } else if (action == 'answered') {
              //pass
+         } else if (action == 'notify_sip') {
+             showNButtons(1);
+             disableButtons();
+             msg = dataReceived.msg;
+             victim = dataReceived.victim;
+             if (victim == username) {
+                 $('#answer-0').html('Continuar');
+                 enableButtons();
+             }
+             $('#question').html(msg);
+             $('#question-2').html('');
+             status = 'sip_send';
          }
      };
      socket.onclose = function() {
@@ -107,10 +121,15 @@
      }
 
      function showNButtons(n) {
-         for (idx = 0; idx++; idx < n) {
-             let id = `#answer-${idx}`;
-             $(id).attr('hidden', true);
+         hideButtons();
+         for (let idx = 0; idx < n; idx++) {
+             var id = `#answer-${idx}`;
+             $(id).attr('hidden', false);
          }
+     }
+
+     function enableButton(id) {
+         $(id).attr('hidden', false);
      }
 
      function addPlayersToButtons(players) {
@@ -128,7 +147,22 @@
          $("#card").attr("src", src);
      }
 
-     ///    MENU STUFF    ///
+     function getRandomCard() {
+         return cards[Math.floor(Math.random() * 52)]
+     }
+
+     function notifyPlayers(players) {
+         $('#players-in-room').html('Jugadores: ' + players.join(', '));
+     }
+
+     function generateRandomCode() {
+         var code = '';
+         for (j = 0; j < 6; j++) {
+             code += Math.floor(Math.random() * 9).toString();
+         }
+         return code;
+     }
+
      $('#menu-create').on('click', function() {
          username = $('#menu-username').val();
          room_number = generateRandomCode();
@@ -168,8 +202,6 @@
              'action': 'start_game'
          });
      });
-     ///    MENU STUFF    ///
-
 
      $('#test').click(function() {
          socket.send(JSON.stringify({
@@ -201,6 +233,7 @@
                  send({
                      'action': 'next_question'
                  })
+                 status = 'not_answered';
              }
          }
      });
@@ -223,31 +256,14 @@
                      'amount': 1
                  })
                  status = 'sip_send';
+             } else if (status == 'sip_send') {
+                 //
              } else {
                  send({
                      'action': 'next_question'
                  })
+                 status = 'not_answered';
              }
          }
      });
-
-     /// IMAGES ///
-     /// IMAGES ///
-
-     function getRandomCard() {
-         return cards[Math.floor(Math.random() * 52)]
-     }
-
-     function notifyPlayers(players) {
-         $('#players-in-room').html('Jugadores: ' + players.join(', '));
-     }
-
-     function generateRandomCode() {
-         var code = '';
-         for (j = 0; j < 6; j++) {
-             code += Math.floor(Math.random() * 9).toString();
-         }
-         return code;
-     }
-
  });
