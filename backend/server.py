@@ -51,11 +51,14 @@ class Game():
     def start(self):
         self.n_players = len(self.players)
         self.sips = {k: {'sent': 0, 'received': 0}  for k in self.players}
-        self.turn = self.players[(self.turn_number - 1) % self.n_players]
+        self._increment_turn()
         self.total_turns = 4 * self.n_players + 1
 
-    def next_turn(self):
+    def _increment_turn(self):
         self.turn = self.players[(self.turn_number - 1) % self.n_players]
+
+    def next_turn(self):
+        self._increment_turn()
         print('Turn:', self.turn)
         if self.turn_number / 4 <= self.n_players:
             # rojo o negro

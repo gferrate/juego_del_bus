@@ -3,7 +3,7 @@
      var current_question = 0;
      var room_number;
      var players;
-     var status = 'not_answered'
+     var action = null;
      //clubs (♣), diamonds (♦), hearts (♥) and spades (♠),
      var cards = [
          '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D', '3H',
@@ -12,7 +12,7 @@
          '9S', 'AC', 'AD', 'AH', 'AS', 'JC', 'JD', 'JH', 'JS', 'KC', 'KD', 'KH',
          'KS', 'QC', 'QD', 'QH', 'QS'
      ];
-     var socket = new WebSocket('ws://192.168.1.130:7777');
+     var socket = new WebSocket('ws://192.168.1.129:7777');
      socket.onopen = function() {
          console.log('Connected!');
      };
@@ -52,7 +52,6 @@
              document.querySelector("#card").classList.toggle("flip-scale-down-diag-2")
              showCard(card);
              addPlayersToButtons(dataReceived.players);
-             status = 'answered'
          } else if (action == 'notify_players') {
              players = dataReceived.players;
          } else if (action == 'answered') {
@@ -68,7 +67,6 @@
              }
              $('#question').html(msg);
              $('#question-2').html('');
-             status = 'sip_send';
          }
      };
      socket.onclose = function() {
@@ -137,7 +135,7 @@
          hideButtons();
          for (idx in players_filtered) {
              let id = `#answer-${idx}`;
-             $(id).html(players[idx]);
+             $(id).html(players_filtered[idx]);
              $(id).attr('hidden', false);
          }
      }
@@ -211,58 +209,29 @@
          }));
      });
 
-     $('#answer-0').on('click', function() {
+     $('#answer-0, #answer-1').on('click', function() {
+         var button_num = parseInt($(this).attr('id').split('-')[1]);
+         console.log(button_num);
          if ($(this).hasClass('disabled')) {
              return
          }
          if (current_question == 0) {
-             if (status == 'not_answered') {
+             if (action == 'show_turn') {
                  send({
                      'action': 'answer',
                      'question_id': 0,
-                     'answer_id': 0 // BLACK
+                     'answer_id': button_num
                  })
-             } else if (status == 'answered') {
+             } else if (action == 'answer_action') {
                  send({
                      'action': 'send_sip',
                      'amount': 1,
                      'to': $(this).html()
                  })
-                 status = 'sip_send';
-             } else if (status == 'sip_send') {
+             } else if (action == 'notify_sip') {
                  send({
                      'action': 'next_question'
                  })
-                 status = 'not_answered';
-             }
-         }
-     });
-
-     $('#answer-1').on('click', function() {
-         if ($(this).hasClass('disabled')) {
-             return
-         }
-         if (current_question == 0) {
-             if (status == 'not_answered') {
-                 send({
-                     'action': 'answer',
-                     'question_id': 0,
-                     'answer_id': 1 // BLACK
-                 })
-             } else if (status == 'answered') {
-                 send({
-                     'action': 'send_sip',
-                     'to': $(this).html(),
-                     'amount': 1
-                 })
-                 status = 'sip_send';
-             } else if (status == 'sip_send') {
-                 //
-             } else {
-                 send({
-                     'action': 'next_question'
-                 })
-                 status = 'not_answered';
              }
          }
      });
