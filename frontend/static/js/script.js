@@ -18,7 +18,6 @@
      };
      socket.onmessage = function(event) {
          let dataReceived = JSON.parse(event.data);
-         console.log(dataReceived);
          action = dataReceived.action;
          if (action == 'notify_players') {
              players = dataReceived.players;
@@ -29,17 +28,25 @@
              $('#questions').attr('hidden', false);
              $('#answer-0').html(dataReceived.btn_0_text);
              $('#answer-1').html(dataReceived.btn_1_text);
-             if (current_question == 0){
-                 showCard('back');
-             } else if (current_question == 1){
-                 showCard(dataReceived.previous_card);
+             if (current_question == 0) {
+                 showCards(['back']);
+             } else if (current_question == 1 || current_question == 2 || current_question == 3) {
+                 var cards_to_show = dataReceived.previous_cards;
+                 cards_to_show.push('back');
+                 showCards(cards_to_show);
              }
              msg = dataReceived.msg;
              turn = dataReceived.turn;
              enableButtons();
              $('#question').html('Turno de ' + turn);
              $('#question-2').html(msg);
-             showNButtons(2);
+             if (current_question == 3){
+                 showNButtons(4);
+                 $('#answer-2').html(dataReceived.btn_2_text);
+                 $('#answer-3').html(dataReceived.btn_3_text);
+             }else {
+                 showNButtons(2);
+             }
              if (turn != username) {
                  disableButtons();
              }
@@ -48,14 +55,21 @@
              msg_2 = dataReceived.msg_2;
              turn = dataReceived.turn;
              card = dataReceived.card;
+             var previous_cards = dataReceived.previous_cards;
+             console.log('aa');
+             console.log(previous_cards);
+             if (previous_cards == undefined) {
+                 previous_cards = [card]
+             } 
              hideButtons();
              if (turn == username) {
                  $('#question').html('Sorbo(s) bebido(s). Continuar');
              }
              $('#question').html(msg);
              $('#question-2').html(msg_2 || '');
-             document.querySelector("#card").classList.toggle("flip-scale-down-diag-2")
-             showCard(card);
+             var id = "#card-" + (previous_cards.length - 1).toString()
+             document.querySelector(id).classList.toggle("flip-scale-down-diag-2")
+             showCards(previous_cards);
              addPlayersToButtons(dataReceived.players);
          } else if (action == 'notify_players') {
              players = dataReceived.players;
@@ -135,6 +149,34 @@
          $(id).attr('hidden', false);
      }
 
+     function showNcards(n) {
+         if (n == 1) {
+             $('#card-0').parent().removeClass('col-6').addClass('col-12');
+             $('#card-1').parent().attr('hidden', true);
+             $('#card-2').parent().attr('hidden', true);
+         } else if (n == 2) {
+             $('#card-0').parent().removeClass('col-12').addClass('col-6');
+             $('#card-1').parent().removeClass('col-12').addClass('col-6');
+             $('#card-1').parent().attr('hidden', false);
+         } else if (n == 3){
+             $('#card-0').parent().removeClass('col-12').removeClass('col-6').addClass('col-4');
+             $('#card-1').parent().removeClass('col-12').removeClass('col-6').addClass('col-4');
+             $('#card-2').parent().removeClass('col-12').removeClass('col-6').addClass('col-4');
+             $('#card-0').parent().attr('hidden', false);
+             $('#card-1').parent().attr('hidden', false);
+             $('#card-2').parent().attr('hidden', false);
+         } else if (n == 4){
+             $('#card-0').parent().removeClass('col-12').removeClass('col-6').removeClass('col-4').addClass('col-3');
+             $('#card-1').parent().removeClass('col-12').removeClass('col-6').removeClass('col-4').addClass('col-3');
+             $('#card-2').parent().removeClass('col-12').removeClass('col-6').removeClass('col-4').addClass('col-3');
+             $('#card-3').parent().removeClass('col-12').removeClass('col-6').removeClass('col-4').addClass('col-3');
+             $('#card-0').parent().attr('hidden', false);
+             $('#card-1').parent().attr('hidden', false);
+             $('#card-2').parent().attr('hidden', false);
+             $('#card-3').parent().attr('hidden', false);
+         }
+     }
+
      function addPlayersToButtons(players) {
          players_filtered = players.filter(e => e !== username);
          hideButtons();
@@ -145,9 +187,16 @@
          }
      }
 
-     function showCard(card) {
-         src = `static/img/deck/${card}.png`;
-         $("#card").attr("src", src);
+     function showCards(cards) {
+         console.log(cards)
+         console.log(cards.length)
+         showNcards(cards.length);
+         for (idx in cards) {
+             card = cards[idx];
+             let src = `static/img/deck/${card}.png`;
+             let id = "#card-" + idx;
+             $(id).attr("src", src);
+         }
      }
 
      function getRandomCard() {
@@ -214,13 +263,15 @@
          }));
      });
 
-     $('#answer-0, #answer-1').on('click', function() {
+     $('#answer-0, #answer-1, #answer-2, #answer-3').on('click', function() {
          var button_num = parseInt($(this).attr('id').split('-')[1]);
-         console.log(button_num);
          if ($(this).hasClass('disabled')) {
              return
          }
-         if (current_question == 0 || current_question == 1) {
+         if (current_question == 0 ||
+             current_question == 1 ||
+             current_question == 2 ||
+             current_question == 3) {
              if (action == 'show_turn') {
                  send({
                      'action': 'answer',

@@ -86,7 +86,36 @@ class Game():
                 'btn_0_text': 'ARRIBA',
                 'btn_1_text': 'ABAJO',
                 'turn': self.turn,
-                'previous_card': self.player_cards[username],
+                'previous_cards': self.player_cards[username],
+                'msg': msg,
+                'question_id': self.question_id
+            }
+        elif self.turn_number < (3 * self.n_players):
+            # ENTRE MEDIO O FUERA?
+            self.question_id = 2
+            msg = self.questions[self.question_id]
+            to_return = {
+                'action': 'show_turn',
+                'btn_0_text': 'ENTRE MEDIO',
+                'btn_1_text': 'FUERA',
+                'turn': self.turn,
+                'previous_cards': self.player_cards[username],
+                'msg': msg,
+                'question_id': self.question_id
+            }
+        elif self.turn_number < (4 * self.n_players):
+            # ENTRE MEDIO O FUERA?
+            self.question_id = 3
+            msg = self.questions[self.question_id]
+     #//clubs (), diamonds (), hearts () and spades (),
+            to_return = {
+                'action': 'show_turn',
+                'btn_0_text': '♣',
+                'btn_1_text': '♦',
+                'btn_2_text': '♥',
+                'btn_3_text': '♠',
+                'turn': self.turn,
+                'previous_cards': self.player_cards[username],
                 'msg': msg,
                 'question_id': self.question_id
             }
@@ -98,19 +127,13 @@ class Game():
 
     def _get_number_from_card(self, card):
         num = card.replace(self._get_letter_from_card(card), '')
-        if num == 'J':
-            return 11
-        elif num == 'Q':
-            return 12
-        elif num == 'K':
-            return 13
-        elif num == 'A':
-            return 14
-        else:
+        cards = {'J': 11, 'Q': 12, 'K': 13, 'A': 14}
+        try:
+            return cards[num]
+        except KeyError:
             return int(num)
 
     def is_red(self, card):
-        return True
         letter = self._get_letter_from_card(card)
         if letter in ('H', 'D'):
             return True
@@ -119,9 +142,18 @@ class Game():
     def is_greater(self, username, card):
         num_bef = self._get_number_from_card(self.player_cards[username][-2])
         num_act = self._get_number_from_card(card)
-        if num_act > num_bef:
-            return True
-        return False
+        return num_act > num_bef
+
+    def is_in_between(self, username, card):
+        num_2_bef = self._get_number_from_card(self.player_cards[username][-3])
+        num_bef = self._get_number_from_card(self.player_cards[username][-2])
+        num_act = self._get_number_from_card(card)
+        return (num_2_bef < num_act and num_bef > num_act)
+
+    def get_num_from_suit(self, card):
+        suit = self._get_letter_from_card(card)
+        suits = {'C': 0, 'D': 1, 'H': 2, 'S': 3}
+        return suits[suit]
 
     def answer(self, username, answer_id):
         card = self.pick_random_card()
@@ -144,6 +176,7 @@ class Game():
                 'action': 'answer_action',
                 'card': card,
                 'turn': self.turn,
+                'previous_cards': self.player_cards[self.turn],
                 'is_correct': True,
                 'msg': msg,
                 'msg_2': msg_2,
@@ -166,14 +199,56 @@ class Game():
                 'action': 'answer_action',
                 'card': card,
                 'turn': self.turn,
+                'previous_cards': self.player_cards[self.turn],
                 'is_correct': True,
                 'msg': msg,
                 'msg_2': msg_2,
                 'players': self.players
             }
-
-        # 0: medio, 1: fuera
-        # 0: corazon, 1: rombos, 2: picas, 3: trevoles
+        elif self.question_id == 2:
+            # 0: medio, 1: fuera
+            in_between = self.is_in_between(username, card)
+            if ((in_between and answer_id == 0) or
+                    (not in_between and answer_id == 1)):
+                is_correct = True
+                msg = 'Correcto, puedes enviar un sorbo'
+                msg_2 = 'A quien le quieres enviar?'
+            elif ((in_between and answer_id == 1) or
+                    (not in_between and answer_id == 0)):
+                is_correct = False
+                msg = 'Incorrecto, bebes un sorbo'
+                msg_2 = None
+            return {
+                'action': 'answer_action',
+                'card': card,
+                'turn': self.turn,
+                'previous_cards': self.player_cards[self.turn],
+                'is_correct': True,
+                'msg': msg,
+                'msg_2': msg_2,
+                'players': self.players
+            }
+        elif self.question_id == 3:
+            # 0: corazon, 1: rombos, 2: picas, 3: trevoles
+            num = self.get_num_from_suit(card)
+            if answer_id == num:
+                is_correct = True
+                msg = 'Correcto, puedes enviar un sorbo'
+                msg_2 = 'A quien le quieres enviar?'
+            else:
+                is_correct = False
+                msg = 'Incorrecto, bebes un sorbo'
+                msg_2 = None
+            return {
+                'action': 'answer_action',
+                'card': card,
+                'turn': self.turn,
+                'previous_cards': self.player_cards[self.turn],
+                'is_correct': True,
+                'msg': msg,
+                'msg_2': msg_2,
+                'players': self.players
+            }
 
     def get_turn(self):
         return self.turn
