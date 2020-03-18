@@ -24,11 +24,16 @@
              players = dataReceived.players;
              notifyPlayers(dataReceived.players);
          } else if (action == 'show_turn') {
+             current_question = dataReceived.question_id;
              $('#menu').attr('hidden', true);
              $('#questions').attr('hidden', false);
              $('#answer-0').html(dataReceived.btn_0_text);
              $('#answer-1').html(dataReceived.btn_1_text);
-             showCard('back');
+             if (current_question == 0){
+                 showCard('back');
+             } else if (current_question == 1){
+                 showCard(dataReceived.previous_card);
+             }
              msg = dataReceived.msg;
              turn = dataReceived.turn;
              enableButtons();
@@ -45,7 +50,7 @@
              card = dataReceived.card;
              hideButtons();
              if (turn == username) {
-                 $('#question').html('Continuar');
+                 $('#question').html('Sorbo(s) bebido(s). Continuar');
              }
              $('#question').html(msg);
              $('#question-2').html(msg_2 || '');
@@ -62,7 +67,7 @@
              msg = dataReceived.msg;
              victim = dataReceived.victim;
              if (victim == username) {
-                 $('#answer-0').html('Continuar');
+                 $('#answer-0').html('Sorbo(s) bebido(s). Continuar');
                  enableButtons();
              }
              $('#question').html(msg);
@@ -215,7 +220,7 @@
          if ($(this).hasClass('disabled')) {
              return
          }
-         if (current_question == 0) {
+         if (current_question == 0 || current_question == 1) {
              if (action == 'show_turn') {
                  send({
                      'action': 'answer',
