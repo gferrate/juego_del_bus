@@ -7,113 +7,116 @@
     <!--<link href="https://fonts.googleapis.com/css?family=Rock+Salt&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Sigmar+One&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">-->
-    <link href="https://fonts.googleapis.com/css?family=Anton&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Anton&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <!--<script src="static/js/bootstrap.js"></script>-->
     <script src="static/js/jquery.min.js"></script>
     <script src="static/js/script.js"></script>
     <title>El juego del bus</title>
 </head>
 
-<body>
-    <nav class="navbar static-top sticky-top">
-        <div class="container">
-            <div class="row w-100">
-                <div class="col-3 text-center">
-                    <a id="nav-username"></a>
+<body class="">
+    <div class="container mb-5">
+        <nav class="navbar static-top">
+            <div class="container">
+                <div class="row w-100">
+                    <div class="col-3 text-center">
+                        <a id="nav-username"></a>
+                    </div>
+                    <div class="col-9 text-right">
+                        <a id="players-in-room"></a>
+                    </div>
                 </div>
-                <div class="col-9 text-right">
-                    <a id="players-in-room"></a>
+                <div class="row w-100 mt-2">
+                    <div class="col-3 text-center">
+                        <img hidden id="nav-card-0" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                    </div>
+                    <div class="col-3 text-center">
+                        <img hidden id="nav-card-1" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                    </div>
+                    <div class="col-3 text-center">
+                        <img hidden id="nav-card-2" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                    </div>
+                    <div class="col-3 text-center">
+                        <img hidden id="nav-card-3" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                    </div>
                 </div>
             </div>
-            <div class="row w-100 mt-2">
-                <div class="col-3 text-center">
-                    <img hidden id="nav-card-0" src="static/img/deck/back.png" class="img-fluid card h-center" >
-                </div>
-                <div class="col-3 text-center">
-                    <img hidden id="nav-card-1" src="static/img/deck/back.png" class="img-fluid card h-center" >
-                </div>
-                <div class="col-3 text-center">
-                    <img hidden id="nav-card-2" src="static/img/deck/back.png" class="img-fluid card h-center" >
-                </div>
-                <div class="col-3 text-center">
-                    <img hidden id="nav-card-3" src="static/img/deck/back.png" class="img-fluid card h-center" >
-                </div>
-            </div>
-        </div>
-    </nav>
+        </nav>
 
-    <div id="menu" class="menu h-center v-center menu-w-1">
-        <div id="menu-content-init">
-            <h1>El juego del bus</h1>
-            <div id="menu-name" class="input-group mb-3">
-                <input id="menu-username" type="text" class="form-control" aria-label="Default"
-                    aria-describedby="inputGroup-sizing-default" placeholder="Tu nombre">
+        <div id="menu" class="menu h-center v-center menu-w-1">
+            <div id="menu-content-init">
+                <h1>El juego del bus</h1>
+                <div id="menu-name" class="input-group mb-3">
+                    <input id="menu-username" type="text" class="form-control" aria-label="Default"
+                        aria-describedby="inputGroup-sizing-default" placeholder="Tu nombre">
+                </div>
+                <button id="menu-create" type="button" class="btn btn-dark">Crear sala</button>
+                <button id="menu-join" type="button" class="btn btn-dark">Unirse a una sala</button>
             </div>
-            <button id="menu-create" type="button" class="btn btn-dark">Crear sala</button>
-            <button id="menu-join" type="button" class="btn btn-dark">Unirse a una sala</button>
-        </div>
-        <div id="menu-content-create" hidden>
-            <h1>CODIGO: <a id="code"></a></h1>
-            <h2>Esperando a jugadores...
-                <h2>
-                    <button id="menu-start-game" type="button" class="btn btn-dark">Empezar</button>
-        </div>
-        <div id="menu-content-join" hidden>
-            <h1>Unirse a una sala</h1>
-            <div class="input-group mb-3">
-                <input id="menu-room-number" type="text" class="form-control" aria-label="Default"
-                    aria-describedby="inputGroup-sizing-default" placeholder="Inserta codigo de sala">
+            <div id="menu-content-create" hidden>
+                <h1>CODIGO: <a id="code"></a></h1>
+                <h1>Esperando a jugadores...
+                    <h1>
+                        <button id="menu-start-game" type="button" class="btn btn-dark">Empezar</button>
             </div>
-            <button id="menu-join-btn" type="button" class="btn btn-dark">Unirse</button>
-        </div>
-    </div>
-    <div id="questions" class="h-center v-center-2 text-center" hidden>
-        <div class="row w-100 text-center h-center">
-           <div class="col-12 pr-0 pl-0">
-                <h1 id="question" class=""></h1>
-                </br>
-                <h1 id="question-2" class=""></h1>
+            <div id="menu-content-join" hidden>
+                <h1>Unirse a una sala</h1>
+                <div class="input-group mb-3">
+                    <input id="menu-room-number" type="text" class="form-control" aria-label="Default"
+                        aria-describedby="inputGroup-sizing-default" placeholder="Inserta codigo de sala">
+                </div>
+                <button id="menu-join-btn" type="button" class="btn btn-dark">Unirse</button>
             </div>
         </div>
-        <div class="row w-100 text-center h-center">
-           <div class="col-12 p-1">
-                <img id="card-0" src="static/img/deck/back.png" class="img-fluid card h-center" >
+        <div id="questions" class="h-center v-center-2 text-center" hidden>
+            <div class="row w-100 text-center h-center">
+                <div class="col-12 pr-0 pl-0">
+                    <h1 id="question" class=""></h1>
+                    </br>
+                    <h1 id="question-2" class=""></h1>
+                </div>
             </div>
-           <div hidden class="col-6 p-1">
-                <img id="card-1" src="static/img/deck/back.png" class="img-fluid card h-center" >
+            <div class="row w-100 text-center h-center">
+                <div class="col-12 p-1">
+                    <img id="card-0" src="static/img/deck/back.png" class="img-fluid card h-center">
+                </div>
+                <div hidden class="col-6 p-1">
+                    <img id="card-1" src="static/img/deck/back.png" class="img-fluid card h-center">
+                </div>
+                <div hidden class="col-6 p-1">
+                    <img id="card-2" src="static/img/deck/back.png" class="img-fluid card h-center">
+                </div>
+                <div hidden class="col-6 p-1">
+                    <img id="card-3" src="static/img/deck/back.png" class="img-fluid card h-center">
+                </div>
+                <div hidden class="col-6 p-1">
+                    <img id="card-4" src="static/img/deck/back.png" class="img-fluid card h-center">
+                </div>
             </div>
-           <div hidden class="col-6 p-1">
-                <img id="card-2" src="static/img/deck/back.png" class="img-fluid card h-center" >
+            <div class="row w-100 text-center mt-3 h-center">
+                <div class="col-6 pr-0 pl-0">
+                    <button id="answer-0" type="button" class="btn btn-dark btn-width">ROJO</button>
+                </div>
+                <div class="col-6 pr-0 pl-0">
+                    <button id="answer-1" type="button" class="btn btn-dark btn-width">NEGRO</button>
+                </div>
             </div>
-           <div hidden class="col-6 p-1">
-                <img id="card-3" src="static/img/deck/back.png" class="img-fluid card h-center" >
+            <div class="row w-100 text-center mt-2 h-center">
+                <div class="col-6 pr-0 pl-0">
+                    <button id="answer-2" type="button" class="btn btn-dark btn-width"></button>
+                </div>
+                <div class="col-6 pr-0 pl-0">
+                    <button id="answer-3" type="button" class="btn btn-dark btn-width"></button>
+                </div>
             </div>
-           <div hidden class="col-6 p-1">
-                <img id="card-4" src="static/img/deck/back.png" class="img-fluid card h-center" >
-            </div>
-        </div>
-        <div class="row w-100 text-center mt-3 h-center">
-           <div class="col-6 pr-0 pl-0">
-                <button id="answer-0" type="button" class="btn btn-dark btn-width">ROJO</button>
-            </div>
-           <div class="col-6 pr-0 pl-0">
-                <button id="answer-1" type="button" class="btn btn-dark btn-width">NEGRO</button>
-            </div>
-        </div>
-        <div class="row w-100 text-center mt-2 h-center">
-           <div class="col-6 pr-0 pl-0">
-                <button id="answer-2" type="button" class="btn btn-dark btn-width"></button>
-            </div>
-           <div class="col-6 pr-0 pl-0">
-                <button id="answer-3" type="button" class="btn btn-dark btn-width"></button>
-            </div>
-        </div>
-        <div class="row w-100 text-center mt-2 h-center">
-           <div class="col-6 pr-0 pl-0">
-                <button id="answer-4" type="button" class="btn btn-dark btn-width"></button>
-            </div>
-           <div class="col-6 pr-0 pl-0">
-                <button id="answer-5" type="button" class="btn btn-dark btn-width"></button>
+            <div class="row w-100 text-center mt-2 h-center">
+                <div class="col-6 pr-0 pl-0">
+                    <button id="answer-4" type="button" class="btn btn-dark btn-width"></button>
+                </div>
+                <div class="col-6 pr-0 pl-0">
+                    <button id="answer-5" type="button" class="btn btn-dark btn-width"></button>
+                </div>
             </div>
         </div>
     </div>

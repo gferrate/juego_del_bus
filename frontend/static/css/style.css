@@ -35,8 +35,13 @@ body {
     animation: bg-color 30s infinite ease-in-out
 }
 
+.navbar{
+    animation: bg-color 30s infinite ease-in-out
+}
+
 h1 {
     font-family: 'sigmarOne';
+    font-size: 1.8rem;
 }
 
 .menu {
@@ -58,6 +63,10 @@ h1 {
 
 .v-center-2 {
     margin-top: 15vh;
+}
+
+.card-nav {
+    width: 5rem;
 }
 
 .card {
