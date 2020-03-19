@@ -53,72 +53,55 @@ class Game():
         self.n_players = len(self.players)
         self.sips = {k: {'sent': 0, 'received': 0}  for k in self.players}
         self.player_cards = {k: [] for k in self.players}
-        self._increment_turn()
+        self.set_player_turn()
         self.total_turns = 4 * self.n_players + 1
 
-    def _increment_turn(self):
+    def set_player_turn(self):
         self.turn = self.players[(self.turn_number - 1) % self.n_players]
 
-    def next_question(self, username):
-        self._increment_turn()
-        #print('Turn:', self.turn)
+    def next_question(self, username, last_one_lost=False):
+        if last_one_lost:
+            self.sips[username]['received'] += 1 # TODO: fix this
         print('-'*50)
         print(self.turn_number)
-        print(self.turn_number)
         if self.turn_number < self.n_players:
-            # rojo o negro
             self.question_id = 0
-            msg = self.questions[self.question_id]
-            to_return = {
-                'action': 'show_turn',
-                'btn_0_text': 'ROJO',
-                'btn_1_text': 'NEGRO',
-                'turn': self.turn,
-                'msg': msg,
-                'question_id': self.question_id
-            }
+            btn_0_text = 'ROJO'
+            btn_1_text = 'NEGRO'
+            btn_2_text = None
+            btn_3_text = None
         elif self.turn_number < (2 * self.n_players):
-            # ARRIBA O ABAJO?
             self.question_id = 1
-            msg = self.questions[self.question_id]
-            to_return = {
-                'action': 'show_turn',
-                'btn_0_text': 'ARRIBA',
-                'btn_1_text': 'ABAJO',
-                'turn': self.turn,
-                'previous_cards': self.player_cards[username],
-                'msg': msg,
-                'question_id': self.question_id
-            }
+            btn_0_text = 'ARRIBA'
+            btn_1_text = 'ABAJO'
+            btn_2_text = None
+            btn_3_text = None
         elif self.turn_number < (3 * self.n_players):
-            # ENTRE MEDIO O FUERA?
             self.question_id = 2
-            msg = self.questions[self.question_id]
-            to_return = {
-                'action': 'show_turn',
-                'btn_0_text': 'ENTRE MEDIO',
-                'btn_1_text': 'FUERA',
-                'turn': self.turn,
-                'previous_cards': self.player_cards[username],
-                'msg': msg,
-                'question_id': self.question_id
-            }
+            btn_0_text = 'ENTRE MEDIO'
+            btn_1_text = 'FUERA'
+            btn_2_text = None
+            btn_3_text = None
         elif self.turn_number < (4 * self.n_players):
-            # ENTRE MEDIO O FUERA?
             self.question_id = 3
-            msg = self.questions[self.question_id]
-     #//clubs (), diamonds (), hearts () and spades (),
-            to_return = {
-                'action': 'show_turn',
-                'btn_0_text': '♣',
-                'btn_1_text': '♦',
-                'btn_2_text': '♥',
-                'btn_3_text': '♠',
-                'turn': self.turn,
-                'previous_cards': self.player_cards[username],
-                'msg': msg,
-                'question_id': self.question_id
-            }
+            btn_0_text = '♣'
+            btn_1_text = '♦'
+            btn_2_text = '♥'
+            btn_3_text = '♠'
+
+        msg = self.questions[self.question_id]
+        self.set_player_turn()
+        to_return = {
+            'action': 'show_turn',
+            'btn_0_text': btn_0_text,
+            'btn_1_text': btn_1_text,
+            'btn_2_text': btn_2_text,
+            'btn_3_text': btn_3_text,
+            'turn': self.turn,
+            'all_cards_seen': self.player_cards,
+            'msg': msg,
+            'question_id': self.question_id
+        }
         self.turn_number += 1
         return to_return
 
@@ -126,7 +109,7 @@ class Game():
         return card[-1]
 
     def _get_number_from_card(self, card):
-        num = card.replace(self._get_letter_from_card(card), '')
+        num = card[:-1]
         cards = {'J': 11, 'Q': 12, 'K': 13, 'A': 14}
         try:
             return cards[num]
@@ -155,114 +138,64 @@ class Game():
         suits = {'C': 0, 'D': 1, 'H': 2, 'S': 3}
         return suits[suit]
 
+    def is_answer_correct(self, username, answer_id, card):
+        if self.question_id == 3:
+            num = self.get_num_from_suit(card)
+            if answer_id == num:
+                return True
+            return False
+        elif self.question_id == 0:
+            condition = self.is_red(card)
+        elif self.question_id == 1:
+            condition = self.is_greater(username, card)
+        elif self.question_id == 2:
+            condition = self.is_in_between(username, card)
+        if ((condition and answer_id == 0) or
+                (not condition and answer_id == 1)):
+            return True
+        return False
+
     def answer(self, username, answer_id):
         card = self.pick_random_card()
         self.player_cards[username].append(card)
-        if self.question_id == 0:
-            # 0: red, 1: black
-            #print(card)
-            is_red = self.is_red(card)
-            if ((is_red and answer_id == 0) or
-                    (not is_red and answer_id == 1)):
-                is_correct = True
-                msg = 'Correcto, puedes enviar un sorbo'
-                msg_2 = 'A quien le quieres enviar?'
-            elif ((is_red and answer_id == 1) or
-                    (not is_red and answer_id == 0)):
-                is_correct = False
-                msg = 'Incorrecto, bebes un sorbo'
-                msg_2 = None
-            return {
-                'action': 'answer_action',
-                'card': card,
-                'turn': self.turn,
-                'previous_cards': self.player_cards[self.turn],
-                'is_correct': True,
-                'msg': msg,
-                'msg_2': msg_2,
-                'players': self.players
-            }
-        elif self.question_id == 1:
-            # 0: up, 1: down
-            is_greater = self.is_greater(username, card)
-            if ((is_greater and answer_id == 0) or
-                    (not is_greater and answer_id == 1)):
-                is_correct = True
-                msg = 'Correcto, puedes enviar un sorbo'
-                msg_2 = 'A quien le quieres enviar?'
-            elif ((is_greater and answer_id == 1) or
-                    (not is_greater and answer_id == 0)):
-                is_correct = False
-                msg = 'Incorrecto, bebes un sorbo'
-                msg_2 = None
-            return {
-                'action': 'answer_action',
-                'card': card,
-                'turn': self.turn,
-                'previous_cards': self.player_cards[self.turn],
-                'is_correct': True,
-                'msg': msg,
-                'msg_2': msg_2,
-                'players': self.players
-            }
-        elif self.question_id == 2:
-            # 0: medio, 1: fuera
-            in_between = self.is_in_between(username, card)
-            if ((in_between and answer_id == 0) or
-                    (not in_between and answer_id == 1)):
-                is_correct = True
-                msg = 'Correcto, puedes enviar un sorbo'
-                msg_2 = 'A quien le quieres enviar?'
-            elif ((in_between and answer_id == 1) or
-                    (not in_between and answer_id == 0)):
-                is_correct = False
-                msg = 'Incorrecto, bebes un sorbo'
-                msg_2 = None
-            return {
-                'action': 'answer_action',
-                'card': card,
-                'turn': self.turn,
-                'previous_cards': self.player_cards[self.turn],
-                'is_correct': True,
-                'msg': msg,
-                'msg_2': msg_2,
-                'players': self.players
-            }
-        elif self.question_id == 3:
-            # 0: corazon, 1: rombos, 2: picas, 3: trevoles
-            num = self.get_num_from_suit(card)
-            if answer_id == num:
-                is_correct = True
-                msg = 'Correcto, puedes enviar un sorbo'
-                msg_2 = 'A quien le quieres enviar?'
-            else:
-                is_correct = False
-                msg = 'Incorrecto, bebes un sorbo'
-                msg_2 = None
-            return {
-                'action': 'answer_action',
-                'card': card,
-                'turn': self.turn,
-                'previous_cards': self.player_cards[self.turn],
-                'is_correct': True,
-                'msg': msg,
-                'msg_2': msg_2,
-                'players': self.players
-            }
-
-    def get_turn(self):
-        return self.turn
+        is_correct = self.is_answer_correct(username, answer_id, card)
+        if is_correct:
+            msg = 'Correcto, puedes enviar un sorbo'
+            msg_2 = 'A quien le quieres enviar?'
+            msg_others = f'Correcto, {self.turn} puede enviar un sorbo'
+            msg_others_2 = 'A quien se lo enviará...'
+        else:
+            msg = 'Incorrecto, bebes un sorbo'
+            msg_2 = None
+            msg_others = f'Incorrecto, {self.turn} bebe un sorbo'
+            msg_others_2 = 'Esperando a que se lo beba...'
+        return {
+            'action': 'answer_action',
+            'card': card,
+            'turn': self.turn,
+            'all_cards_seen': self.player_cards,
+            'is_correct': is_correct,
+            'msg': msg,
+            'msg_2': msg_2,
+            'msg_others': msg_others,
+            'msg_others_2': msg_others_2,
+            'players': self.players
+        }
 
     def send_sip(self, username, to, amount):
-        self.sips[username]['sent'] += 1
-        self.sips[to]['received'] += 1
-        msg = f'{to} bebe {amount} sorbo'
+        self.sips[username]['sent'] += amount
+        self.sips[to]['received'] += amount
+        msg = f'Bebes {amount} sorbo'
+        ans = 'Sorbo bebido. Continuar.'
         if amount > 1:
             msg += 's'
-        return {'action': 'notify_sip', 'victim': to, 'msg': msg}
-
-    def get_turn_number(self):
-        return self.turn_number
+            ans = 'Sorbos bebidos. Continuar.'
+        return {
+            'action': 'notify_sip',
+            'victim': to,
+            'msg': msg,
+            'ans': ans
+        }
 
     def pick_random_card(self):
         card = random.choice(self.remaining_cards)
@@ -313,11 +246,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 self.rooms[room]['game'].add_player(username)
             elif action == 'send_message':
                 for r in self.rooms[room]['players']:
-                    msg = json.dumps({'test': f'Hi, {r["username"]}', 'test3': 333})
-                    r['ws'].write_message(msg)
+                    msg = json.dumps(data['msg'])
+                    r['ws'].write_message(room, msg)
             elif action == 'start_game':
                 self.rooms[room]['game'].start()
-                self.notify_players_in_room(room, {'msg': 'Hell yeah'})
                 self.notify_players_in_room(
                     room, self.rooms[room]['game'].next_question(username)
                 )
@@ -330,7 +262,8 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 )
             elif action == 'next_question':
                 self.notify_players_in_room(
-                    room, self.rooms[room]['game'].next_question(username)
+                    room, self.rooms[room]['game'].next_question(
+                        username, last_one_lost=data['last_one_lost'])
                 )
             elif action == 'send_sip':
                 self.notify_players_in_room(

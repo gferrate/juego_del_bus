@@ -3,6 +3,7 @@
      var current_question = 0;
      var room_number;
      var players;
+     var last_one_correct;
      var action = null;
      //clubs (♣), diamonds (♦), hearts (♥) and spades (♠),
      var cards = [
@@ -31,7 +32,7 @@
              if (current_question == 0) {
                  showCards(['back']);
              } else if (current_question == 1 || current_question == 2 || current_question == 3) {
-                 var cards_to_show = dataReceived.previous_cards;
+                 var cards_to_show = dataReceived.all_cards_seen[dataReceived.turn];
                  cards_to_show.push('back');
                  showCards(cards_to_show);
              }
@@ -40,11 +41,11 @@
              enableButtons();
              $('#question').html('Turno de ' + turn);
              $('#question-2').html(msg);
-             if (current_question == 3){
+             if (current_question == 3) {
                  showNButtons(4);
                  $('#answer-2').html(dataReceived.btn_2_text);
                  $('#answer-3').html(dataReceived.btn_3_text);
-             }else {
+             } else {
                  showNButtons(2);
              }
              if (turn != username) {
@@ -55,37 +56,51 @@
              msg_2 = dataReceived.msg_2;
              turn = dataReceived.turn;
              card = dataReceived.card;
-             var previous_cards = dataReceived.previous_cards;
-             console.log('aa');
-             console.log(previous_cards);
-             if (previous_cards == undefined) {
-                 previous_cards = [card]
-             } 
+             last_one_correct = dataReceived.is_correct;
              hideButtons();
              if (turn == username) {
-                 $('#question').html('Sorbo(s) bebido(s). Continuar');
+                 $('#question').html(msg);
+                 $('#question-2').html(msg_2 || '');
+             } else {
+                 $('#question').html(dataReceived.msg_others);
+                 $('#question-2').html(dataReceived.msg_others_2);
              }
-             $('#question').html(msg);
-             $('#question-2').html(msg_2 || '');
-             var id = "#card-" + (previous_cards.length - 1).toString()
-             document.querySelector(id).classList.toggle("flip-scale-down-diag-2")
-             showCards(previous_cards);
-             addPlayersToButtons(dataReceived.players);
+             var cards_to_show = dataReceived.all_cards_seen[dataReceived.turn];
+             console.log(cards_to_show);
+             var id = "#card-" + (cards_to_show.length - 1).toString()
+             $(id).removeClass("flip-scale-down-diag-2").addClass("flip-scale-down-diag-2");
+             showCards(cards_to_show);
+             if (dataReceived.is_correct) {
+                 addPlayersToButtons(dataReceived.players);
+             } else {
+                 if (turn == username) {
+                     showNButtons(1);
+                     enableButtons();
+                     $('#answer-0').html('Sorbo(s) bebido(s). Continuar');
+                 } else {
+                     //
+                 }
+             }
          } else if (action == 'notify_players') {
              players = dataReceived.players;
          } else if (action == 'answered') {
              //pass
          } else if (action == 'notify_sip') {
-             showNButtons(1);
-             disableButtons();
              msg = dataReceived.msg;
+             msg_others = dataReceived.msg_others;
+             msg_others_2 = dataReceived.msg_others_2;
              victim = dataReceived.victim;
+             hideButtons();
              if (victim == username) {
-                 $('#answer-0').html('Sorbo(s) bebido(s). Continuar');
+                 showNButtons(1);
+                 $('#answer-0').html(dataReceived.ans);
+                 $('#question').html(msg);
+                 $('#question-2').html('');
                  enableButtons();
+             } else {
+                 $('#question').html(msg_others);
+                 $('#question-2').html(msg_others_2);
              }
-             $('#question').html(msg);
-             $('#question-2').html('');
          }
      };
      socket.onclose = function() {
@@ -158,14 +173,14 @@
              $('#card-0').parent().removeClass('col-12').addClass('col-6');
              $('#card-1').parent().removeClass('col-12').addClass('col-6');
              $('#card-1').parent().attr('hidden', false);
-         } else if (n == 3){
+         } else if (n == 3) {
              $('#card-0').parent().removeClass('col-12').removeClass('col-6').addClass('col-4');
              $('#card-1').parent().removeClass('col-12').removeClass('col-6').addClass('col-4');
              $('#card-2').parent().removeClass('col-12').removeClass('col-6').addClass('col-4');
              $('#card-0').parent().attr('hidden', false);
              $('#card-1').parent().attr('hidden', false);
              $('#card-2').parent().attr('hidden', false);
-         } else if (n == 4){
+         } else if (n == 4) {
              $('#card-0').parent().removeClass('col-12').removeClass('col-6').removeClass('col-4').addClass('col-3');
              $('#card-1').parent().removeClass('col-12').removeClass('col-6').removeClass('col-4').addClass('col-3');
              $('#card-2').parent().removeClass('col-12').removeClass('col-6').removeClass('col-4').addClass('col-3');
@@ -188,8 +203,6 @@
      }
 
      function showCards(cards) {
-         console.log(cards)
-         console.log(cards.length)
          showNcards(cards.length);
          for (idx in cards) {
              card = cards[idx];
@@ -256,11 +269,10 @@
      });
 
      $('#test').click(function() {
-         socket.send(JSON.stringify({
+         send({
              'action': 'send_message',
-             'room': room_number,
-             'username': username
-         }));
+             'msg': 'hahaa'
+         })
      });
 
      $('#answer-0, #answer-1, #answer-2, #answer-3').on('click', function() {
@@ -279,14 +291,22 @@
                      'answer_id': button_num
                  })
              } else if (action == 'answer_action') {
-                 send({
-                     'action': 'send_sip',
-                     'amount': 1,
-                     'to': $(this).html()
-                 })
+                 if (last_one_correct) {
+                     send({
+                         'action': 'send_sip',
+                         'amount': 1,
+                         'to': $(this).html()
+                     })
+                 } else {
+                     send({
+                         'action': 'next_question',
+                         'last_one_lost': true
+                     })
+                 }
              } else if (action == 'notify_sip') {
                  send({
-                     'action': 'next_question'
+                     'action': 'next_question',
+                     'last_one_lost': false
                  })
              }
          }
