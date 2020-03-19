@@ -44,6 +44,10 @@ h1 {
     font-size: 1.8rem;
 }
 
+#code {
+    font-family: 'sigmarOne';
+}
+
 .menu {
     text-align: center;
     height: 100vh;
