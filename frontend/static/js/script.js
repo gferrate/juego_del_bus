@@ -24,6 +24,7 @@
              players = dataReceived.players;
              notifyPlayers(dataReceived.players);
          } else if (action == 'show_turn') {
+             console.log('show_turn');
              current_question = dataReceived.question_id;
              $('#menu').attr('hidden', true);
              $('#questions').attr('hidden', false);
@@ -52,6 +53,7 @@
                  disableButtons();
              }
          } else if (action == 'answer_action') {
+             console.log('answer_action');
              msg = dataReceived.msg;
              msg_2 = dataReceived.msg_2;
              turn = dataReceived.turn;
@@ -65,11 +67,13 @@
                  $('#question').html(dataReceived.msg_others);
                  $('#question-2').html(dataReceived.msg_others_2);
              }
-             var cards_to_show = dataReceived.all_cards_seen[dataReceived.turn];
+             var all_cards_seen = dataReceived.all_cards_seen;
+             var cards_to_show = all_cards_seen[dataReceived.turn];
              console.log(cards_to_show);
              var id = "#card-" + (cards_to_show.length - 1).toString()
              $(id).removeClass("flip-scale-down-diag-2").addClass("flip-scale-down-diag-2");
              showCards(cards_to_show);
+             showNavCards(all_cards_seen[username]);
              if (dataReceived.is_correct) {
                  addPlayersToButtons(dataReceived.players);
              } else {
@@ -86,6 +90,7 @@
          } else if (action == 'answered') {
              //pass
          } else if (action == 'notify_sip') {
+             console.log('notify_sip');
              msg = dataReceived.msg;
              msg_others = dataReceived.msg_others;
              msg_others_2 = dataReceived.msg_others_2;
@@ -199,6 +204,16 @@
              let id = `#answer-${idx}`;
              $(id).html(players_filtered[idx]);
              $(id).attr('hidden', false);
+         }
+     }
+
+     function showNavCards(cards) {
+         for (idx in cards) {
+             card = cards[idx];
+             let src = `static/img/deck/${card}.png`;
+             let id = "#nav-card-" + idx;
+             $(id).attr("src", src);
+             $(id).attr("hidden", false);
          }
      }
 
