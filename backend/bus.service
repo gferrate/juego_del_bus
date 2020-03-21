@@ -2,7 +2,7 @@
 Description=Juego del Bus Service
 
 [Service]
-ExecStart=/usr/bin/python3 /home/ubuntu/juego_del_bus/backend/server.py
+ExecStart=/home/ubuntu/juego_del_bus/venv/bin/python /home/ubuntu/juego_del_bus/backend/server.py
 Restart=on-failure
 
 [Install]
