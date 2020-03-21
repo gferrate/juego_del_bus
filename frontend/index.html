@@ -71,7 +71,7 @@
         </nav>
 
         <div id="menu" class="menu h-center v-center menu-w-1">
-            <div hidden id="alert" class="alert alert-danger menu-w-1 h-center mb-4" role="alert"> </div>
+        <div hidden id="alert" class="alert alert-danger menu-w-1 h-center mb-4" role="alert"> </div>
             <div id="menu-content-init">
                 <h1>El juego del bus</h1>
                 <div id="menu-name" class="input-group mb-3">
@@ -94,7 +94,7 @@
             <div id="menu-content-join" hidden>
                 <h1>Unirse a una sala</h1>
                 <div class="input-group mb-3">
-                    <input id="menu-room-number" type="text" class="form-control" aria-label="Default"
+                    <input pattern="[0-9]*" id="menu-room-number" type="text" class="form-control" aria-label="Default"
                         aria-describedby="inputGroup-sizing-default" placeholder="Inserta código de sala">
                 </div>
                 <button id="menu-join-btn" type="button" class="btn btn-dark">Unirse</button>

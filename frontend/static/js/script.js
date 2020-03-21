@@ -243,14 +243,18 @@
          return code;
      }
 
+     function toggleAlert(msg){
+         $('#alert').html(msg);
+         $('#alert').attr('hidden', false);
+         $("#alert").fadeTo(2000, 500).slideUp(500, function() {
+             $("#alert").slideUp(500);
+         });
+     }
+
      function verifyUsername() {
          username = $('#menu-username').val();
          if (username == '') {
-             $('#alert').html('Nombre de usuario requerido');
-             $('#alert').attr('hidden', false);
-             $("#alert").fadeTo(2000, 500).slideUp(500, function() {
-                 $("#alert").slideUp(500);
-             });
+             toggleAlert('Nombre de usuario requerido');
              return false
          } else {
              $('#alert').attr('hidden', true);
@@ -293,6 +297,10 @@
 
      $('#menu-join-btn').click(function() {
          room_number = $('#menu-room-number').val();
+         if (room_number == ''){
+             toggleAlert('Número de sala requerido')
+             return
+         }
          $('#menu').attr('hidden', true);
          socket.send(JSON.stringify({
              'action': 'join_room',
