@@ -1,9 +1,25 @@
 <html>
 
 <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-157509775-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag()
+        {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'UA-157509775-2');
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta charset="UTF-8">
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+        rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+        crossorigin="anonymous">
 
     <link rel="stylesheet" type="text/css" href="static/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="static/css/style.css">
@@ -14,6 +30,13 @@
         rel="stylesheet">
     <!--<script src="static/js/bootstrap.js"></script>-->
     <script src="static/js/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
     <script src="static/js/script.js"></script>
     <title>El juego del bus</title>
 </head>
@@ -48,19 +71,25 @@
         </nav>
 
         <div id="menu" class="menu h-center v-center menu-w-1">
+            <div hidden id="alert" class="alert alert-danger menu-w-1 h-center mb-4" role="alert"> </div>
             <div id="menu-content-init">
                 <h1>El juego del bus</h1>
                 <div id="menu-name" class="input-group mb-3">
                     <input id="menu-username" type="text" class="form-control" aria-label="Default"
-                        aria-describedby="inputGroup-sizing-default" placeholder="Tu nombre">
+                        aria-describedby="inputGroup-sizing-default" placeholder="Tu nombre"
+                        required>
                 </div>
                 <button id="menu-create" type="button" class="btn btn-dark">Crear sala</button>
                 <button id="menu-join" type="button" class="btn btn-dark">Unirse a una sala</button>
             </div>
             <div id="menu-content-create" hidden>
                 <h1>Código: <a id="code"></a></h1>
-                <h1>Esperando a jugadores...<h1>
+                <h1>Esperando a jugadores...
+                    <h1>
                         <button id="menu-start-game" type="button" class="btn btn-dark">Empezar</button>
+                        <button id="shareWhatsapp" type="button" class="btn btn-dark ml-1" data-action="share/whatsapp/share">
+                    Invita por 
+                    <i class="fa fa-whatsapp ml-1" aria-hidden="true"></i> </button>
             </div>
             <div id="menu-content-join" hidden>
                 <h1>Unirse a una sala</h1>

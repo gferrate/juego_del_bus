@@ -243,8 +243,31 @@
          return code;
      }
 
-     $('#menu-create').on('click', function() {
+     function verifyUsername() {
          username = $('#menu-username').val();
+         if (username == '') {
+             $('#alert').html('Nombre de usuario requerido');
+             $('#alert').attr('hidden', false);
+             $("#alert").fadeTo(2000, 500).slideUp(500, function() {
+                 $("#alert").slideUp(500);
+             });
+             return false
+         } else {
+             $('#alert').attr('hidden', true);
+             return true
+         }
+     }
+
+     $('#shareWhatsapp').click(function() {
+         let text = `Hacemos una partida del juegodelbus.es? El código de sala es: *${room_number}*`;
+         let href = "whatsapp://send?text=" + text;
+         window.location.href = href;
+     });
+
+     $('#menu-create').on('click', function() {
+         if (!verifyUsername()) {
+             return
+         }
          room_number = generateRandomCode();
          $('#menu-content-init').attr('hidden', true);
          $('#code').html(room_number);
@@ -259,7 +282,9 @@
      });
 
      $('#menu-join').click(function() {
-         username = $('#menu-username').val();
+         if (!verifyUsername()) {
+             return
+         }
          $('#menu-content-init').attr('hidden', true);
          $('#menu-content-create').attr('hidden', true);
          $('#menu-content-join').attr('hidden', false);
