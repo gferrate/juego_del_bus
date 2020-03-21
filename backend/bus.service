@@ -1,0 +1,9 @@
+[Unit]
+Description=Juego del Bus Service
+
+[Service]
+ExecStart=/usr/bin/python3 /home/ubuntu/juego_del_bus/backend/server.py
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
