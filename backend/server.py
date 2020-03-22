@@ -269,6 +269,7 @@ class Game():
         self.total_turns = 4 * self.n_players + 6 + 1
 
 
+
 class WSHandler(tornado.websocket.WebSocketHandler):
     rooms = {}
 
@@ -348,6 +349,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                     room,
                     self.rooms[room]['game'].calculate_pre_bus_cards()
                 )
+
+            elif action == 'pre_bus_done':
+                sips_pre_bus
+                pass
         except Exception as e:
             print('\n\nERROR')
             print(e)

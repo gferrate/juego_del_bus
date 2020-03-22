@@ -1,32 +1,10 @@
 @font-face {
-    font-family: rockSalt;
-    src: url(../fonts/font.woff2);
-}
-
-@font-face {
-    font-family: specialElite;
-    src: url(../fonts/font_2.woff2);
-}
-
-@font-face {
-    font-family: sigmarOne;
-    src: url(../fonts/font_3.woff2);
-}
-
-@font-face {
-    font-family: montserratLocal;
-    src: url(../fonts/montserrat.woff2);
-}
-
-@font-face {
-    font-family: antonLocal;
-    src: url(../fonts/anton.woff2);
+    font-family: kabel;
+    src: url(../fonts/KabelLTStd-Black.otf);
 }
 
 * {
-    //font-family: 'Sigmar One', cursive;
-    //font-family: 'Montserrat', sans-serif;
-    font-family: 'Anton', sans-serif;
+    font-family: 'kabel', sans-serif;
     font-weight: lighter;
 }
 
@@ -37,15 +15,6 @@ body {
 
 .navbar{
     animation: bg-color 30s infinite ease-in-out
-}
-
-h1 {
-    font-family: 'sigmarOne';
-    font-size: 1.8rem;
-}
-
-#code {
-    font-family: 'sigmarOne';
 }
 
 .menu {
