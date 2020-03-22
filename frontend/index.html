@@ -13,6 +13,10 @@
         gtag('js', new Date());
         gtag('config', 'UA-157509775-2');
     </script>
+    <link rel="apple-touch-icon" sizes="180x180" href="static/img/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/img/favicon/favicon-16x16.png">
+    <link rel="manifest" href="static/img/site.webmanifest">
 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta charset="UTF-8">
@@ -30,18 +34,27 @@
         rel="stylesheet">
     <!--<script src="static/js/bootstrap.js"></script>-->
     <script src="static/js/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-        crossorigin="anonymous"></script>
+    <script src="static/js/jquery.flip.min.js">
+        < script src =
+            "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity =
+            "sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin = "anonymous" >
+    </script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
-
     <script src="static/js/script.js"></script>
+
     <title>El juego del bus</title>
 </head>
 
+<audio id="sound" preload="auto">
+  <source src="static/mp3/open_can.mp3" type="audio/mp3">
+</audio>
+
 <body class="">
+
     <div class="container mb-5">
         <nav class="navbar static-top">
             <div class="container">
@@ -55,23 +68,25 @@
                 </div>
                 <div class="row w-100 mt-2">
                     <div class="col-3 text-center">
-                        <img hidden id="nav-card-0" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                        <img hidden id="nav-card-0" src="static/img/deck/back.png" class="img-fluid card-nav h-center shadow">
                     </div>
                     <div class="col-3 text-center">
-                        <img hidden id="nav-card-1" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                        <img hidden id="nav-card-1" src="static/img/deck/back.png" class="img-fluid card-nav h-center shadow">
                     </div>
                     <div class="col-3 text-center">
-                        <img hidden id="nav-card-2" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                        <img hidden id="nav-card-2" src="static/img/deck/back.png" class="img-fluid card-nav h-center shadow">
                     </div>
                     <div class="col-3 text-center">
-                        <img hidden id="nav-card-3" src="static/img/deck/back.png" class="img-fluid card-nav h-center">
+                        <img hidden id="nav-card-3" src="static/img/deck/back.png" class="img-fluid card-nav h-center shadow">
                     </div>
                 </div>
             </div>
         </nav>
 
         <div id="menu" class="menu h-center v-center menu-w-1">
-        <div hidden id="alert" class="alert alert-danger menu-w-1 h-center mb-4" role="alert"> </div>
+            <div hidden id="alert" class="alert alert-danger menu-w-1 h-center mb-4" role="alert">
+            </div>
+            <img src="static/img/bus_logo.png" width="280px" class="img-fluid h-center">
             <div id="menu-content-init">
                 <h1>El juego del bus</h1>
                 <div id="menu-name" class="input-group mb-3">
@@ -94,8 +109,9 @@
             <div id="menu-content-join" hidden>
                 <h1>Unirse a una sala</h1>
                 <div class="input-group mb-3">
-                    <input pattern="[0-9]*" id="menu-room-number" type="text" class="form-control" aria-label="Default"
-                        aria-describedby="inputGroup-sizing-default" placeholder="Inserta código de sala">
+                    <input pattern="[0-9]*" id="menu-room-number" type="text" class="form-control"
+                        aria-label="Default" aria-describedby="inputGroup-sizing-default"
+                        placeholder="Inserta código de sala">
                 </div>
                 <button id="menu-join-btn" type="button" class="btn btn-dark">Unirse</button>
             </div>
@@ -110,19 +126,54 @@
             </div>
             <div class="row w-100 text-center h-center">
                 <div class="col-12 p-1">
-                    <img id="card-0" src="static/img/deck/back.png" class="img-fluid card h-center">
+                    <div id="card-0">
+                        <div class="front">
+                            <img src="static/img/deck/back.png" class="img-fluid card h-center">
+                        </div>
+                        <div class="back">
+                            <img id="card-0-content" src="static/img/deck/back.png" class="img-fluid card h-center">
+                        </div>
+                    </div>
                 </div>
                 <div hidden class="col-6 p-1">
-                    <img id="card-1" src="static/img/deck/back.png" class="img-fluid card h-center">
+                    <div id="card-1">
+                        <div class="front">
+                            <img src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                        <div class="back">
+                            <img id="card-1-content" src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                    </div>
                 </div>
                 <div hidden class="col-6 p-1">
-                    <img id="card-2" src="static/img/deck/back.png" class="img-fluid card h-center">
+                    <div id="card-2">
+                        <div class="front">
+                            <img src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                        <div class="back">
+                            <img id="card-2-content" src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                    </div>
                 </div>
                 <div hidden class="col-6 p-1">
-                    <img id="card-3" src="static/img/deck/back.png" class="img-fluid card h-center">
+                    <div id="card-3">
+                        <div class="front">
+                            <img src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                        <div class="back">
+                            <img id="card-3-content" src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                    </div>
                 </div>
                 <div hidden class="col-6 p-1">
-                    <img id="card-4" src="static/img/deck/back.png" class="img-fluid card h-center">
+                    <div id="card-4">
+                        <div class="front">
+                            <img src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                        <div class="back">
+                            <img id="card-4-content" src="static/img/deck/back.png" class="img-fluid card h-center shadow">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="row w-100 text-center mt-3 h-center">
@@ -151,69 +202,130 @@
             </div>
         </div>
         <div id="pre-bus" class="h-center v-center-2 text-center mt-1" hidden>
-            <div class="row w-100 text-center h-center">
-                <div class="col-6 p-2">
-                    <img id="pre-bus-0" src="static/img/deck/back.png" class="img-fluid card h-center">
-                </div>
-                <div class="col-6 p-2">
-                    <img id="pre-bus-1" src="static/img/deck/back.png" class="img-fluid card h-center">
+            <h1 id="question-pre-bus" class="">Clasificatoria para el bus</h1>
+            </br>
+            <h1 id="question-pre-bus-2" class=""></h1>
+            <div class="row w-100 text-center h-center mt-2">
+                <div class="d-flex justify-content-center flex-row h-center w-100">
+                    <div id="pre-bus-6" class="">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-6-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
+                    <div id="pre-bus-7" class="ml-2">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-7-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="row w-100 text-center h-center">
-                <div class="col-6 p-2">
-                    <img id="pre-bus-2" src="static/img/deck/back.png" class="img-fluid card h-center">
-                </div>
-                <div class="col-6 p-2">
-                    <img id="pre-bus-3" src="static/img/deck/back.png" class="img-fluid card h-center">
+            <div class="row w-100 text-center h-center mt-2">
+                <div class="d-flex justify-content-center flex-row h-center w-100">
+                    <div id="pre-bus-4" class="">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-4-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
+                    <div id="pre-bus-5" class="ml-2">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-5-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="row w-100 text-center h-center">
-                <div class="col-6 p-2">
-                    <img id="pre-bus-4" src="static/img/deck/back.png" class="img-fluid card h-center">
-                </div>
-                <div class="col-6 p-2">
-                    <img id="pre-bus-5" src="static/img/deck/back.png" class="img-fluid card h-center">
+            <div class="row w-100 text-center h-center mt-2">
+                <div class="d-flex justify-content-center flex-row h-center w-100">
+                    <div id="pre-bus-2" class="">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-2-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
+                    <div id="pre-bus-3" class="ml-2">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-3-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
                 </div>
             </div>
+            <div class="row w-100 text-center h-center mt-2">
+                <div class="d-flex justify-content-center flex-row h-center w-100">
+                    <div id="pre-bus-0" class="">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-0-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
+                    <div id="pre-bus-1" class="ml-2">
+                        <div class="front ">
+                            <img src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                        <div class="back ">
+                            <img id="pre-bus-1-content" src="static/img/deck/back.png" class="card-prebus shadow">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="pre-bus-cards" type="button" class="btn btn-dark mt-3">Destapa!</button>
         </div>
+    </div>
 
-        <div id="bus" class="h-center v-center-2 text-center mt-1" hidden>
-            <div class="row w-100 text-center h-center">
-                <div class="col-12 p-2">
-                    <img id="bus-0" src="static/img/deck/back.png" class="img-fluid card-bus h-center">
-                </div>
-            </div>
-            <div class="row w-100 text-center h-center">
-                <div class="col-12 p-2">
-                    <img id="bus-2" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-3" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                </div>
-            </div>
-            <div class="row w-100 text-center h-center">
-                <div class="col-12 p-2">
-                    <img id="bus-4" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-5" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-6" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                </div>
-            </div>
-            <div class="row w-100 text-center h-center">
-                <div class="col-12 p-2">
-                    <img id="bus-7" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-8" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-9" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-10" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                </div>
-            </div>
-            <div class="row w-100 text-center h-center">
-                <div class="col-12 p-2">
-                    <img id="bus-11" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-12" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-13" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-14" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                    <img id="bus-15" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
-                </div>
+    <div id="bus" class="h-center v-center-2 text-center mt-1" hidden>
+        <div class="row w-100 text-center h-center">
+            <div class="col-12 pr-2 pl-2 pt-1 pb-1">
+                <img id="bus-0" src="static/img/deck/back.png" class="img-fluid card-bus h-center">
             </div>
         </div>
+        <div class="row w-100 text-center h-center">
+            <div class="col-12 pr-2 pl-2 pt-1 pb-1">
+                <img id="bus-2" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-3" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+            </div>
+        </div>
+        <div class="row w-100 text-center h-center">
+            <div class="col-12 pr-2 pl-2 pt-1 pb-1">
+                <img id="bus-4" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-5" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-6" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+            </div>
+        </div>
+        <div class="row w-100 text-center h-center">
+            <div class="col-12 pr-2 pl-2 pt-1 pb-1">
+                <img id="bus-7" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-8" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-9" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-10" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+            </div>
+        </div>
+        <div class="row w-100 text-center h-center">
+            <div class="col-12 pr-2 pl-2 pt-1 pb-1">
+                <img id="bus-11" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-12" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-13" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-14" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+                <img id="bus-15" src="static/img/deck/back.png" class="img-fluid card-bus h-center d-inline">
+            </div>
+        </div>
+    </div>
     </div>
 </body>
 

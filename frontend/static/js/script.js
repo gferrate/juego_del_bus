@@ -14,9 +14,75 @@
          'KS', 'QC', 'QD', 'QH', 'QS'
      ];
      var socket = new WebSocket('ws://192.168.1.129:7777');
+     var n_unfolded_prebus_cards = 0;
+     var acc_sips_user = 0;
+     var navbar_cards = [];
+
+     function diffuminateCardInNav(i) {
+         console.log(card)
+         var id = "#nav-card-" + i.toString();
+         $(id).css({
+             'opacity': 0.5
+         });
+         console.log(id)
+     }
+
+     function getNumberOfCard(card) {
+         return parseInt(card.substring(0, card.length - 1));
+     }
+
+     function numbersCoincide(c1, c2) {
+         return getNumberOfCard(c1) == getNumberOfCard(c2);
+     }
+
+     function preBusDone(){
+     }
+
+     function unFoldPreBusCards(pre_bus_cards, sips_to_send) {
+         setTimeout(function() {
+             if (n_unfolded_prebus_cards < 8) {
+                 var sips_to_send_round = sips_to_send[username][n_unfolded_prebus_cards];
+                 card = pre_bus_cards[n_unfolded_prebus_cards];
+                 for (i in navbar_cards) {
+                     c = navbar_cards[i];
+                     if (numbersCoincide(c, card)) {
+                         diffuminateCardInNav(i);
+                     }
+                 }
+                 var id = "#pre-bus-" + n_unfolded_prebus_cards.toString() + '-content';
+                 let src = `static/img/deck/${card}.png`;
+                 $(id).attr("src", src);
+                 id = "#pre-bus-" + n_unfolded_prebus_cards.toString();
+                 $(id).flip(true);
+                 if (sips_to_send_round > 0) {
+                     acc_sips_user += sips_to_send_round;
+                     let msg = `Envias ${acc_sips_user} sorbo`
+                     if (acc_sips_user > 1) {
+                         msg += 's'
+                     }
+                     $('#question-pre-bus-2').html(msg);
+                 }
+                 if (sips_to_send_round == 7) {
+                     preBusDone()
+                 }
+                 unFoldPreBusCards(pre_bus_cards, sips_to_send);
+             }
+             n_unfolded_prebus_cards += 1;
+         }, 1000);
+     }
      socket.onopen = function() {
          console.log('Connected!');
      };
+     for (var i = 0; i <= 7; i++) {
+         var id = `#card-${i}`;
+         $(id).flip({
+             'trigger': 'manual'
+         });
+         id = `#pre-bus-${i}`;
+         $(id).flip({
+             'trigger': 'manual'
+         });
+     }
      socket.onmessage = function(event) {
          let dataReceived = JSON.parse(event.data);
          action = dataReceived.action;
@@ -30,13 +96,11 @@
              $('#questions').attr('hidden', false);
              $('#answer-0').html(dataReceived.btn_0_text);
              $('#answer-1').html(dataReceived.btn_1_text);
-             if (current_question == 0) {
-                 showCards(['back']);
-             } else if (current_question == 1 || current_question == 2 || current_question == 3) {
-                 var cards_to_show = dataReceived.all_cards_seen[dataReceived.turn];
-                 cards_to_show.push('back');
-                 showCards(cards_to_show);
-             }
+             var cards_to_show = dataReceived.all_cards_seen[dataReceived.turn];
+             cards_to_show.push('back');
+             var id = "#card-" + (cards_to_show.length - 1).toString()
+             $(id).flip(false);
+             showCards(cards_to_show);
              msg = dataReceived.msg;
              turn = dataReceived.turn;
              enableButtons();
@@ -69,10 +133,9 @@
              }
              var all_cards_seen = dataReceived.all_cards_seen;
              var cards_to_show = all_cards_seen[dataReceived.turn];
-             console.log(cards_to_show);
              var id = "#card-" + (cards_to_show.length - 1).toString()
-             $(id).removeClass("flip-scale-down-diag-2").addClass("flip-scale-down-diag-2");
              showCards(cards_to_show);
+             $(id).flip(true);
              showNavCards(all_cards_seen[username]);
              if (dataReceived.is_correct) {
                  addPlayersToButtons(dataReceived.players);
@@ -106,6 +169,14 @@
                  $('#question').html(msg_others);
                  $('#question-2').html(msg_others_2);
              }
+         } else if (action == 'start_pre_bus') {
+             $('#questions').attr('hidden', true);
+             $('#pre-bus').attr('hidden', false);
+         } else if (action == 'pre_bus_cards') {
+             $('#pre-bus-cards').attr('hidden', true);
+             var pre_bus_cards = dataReceived.pre_bus_cards;
+             var sips_to_send = dataReceived.sips_to_send;
+             unFoldPreBusCards(pre_bus_cards, sips_to_send)
          }
      };
      socket.onclose = function() {
@@ -208,12 +279,14 @@
      }
 
      function showNavCards(cards) {
+         navbar_cards = cards;
          for (idx in cards) {
              card = cards[idx];
              let src = `static/img/deck/${card}.png`;
              let id = "#nav-card-" + idx;
              $(id).attr("src", src);
              $(id).attr("hidden", false);
+             $(id).data("card", card);
          }
      }
 
@@ -222,7 +295,7 @@
          for (idx in cards) {
              card = cards[idx];
              let src = `static/img/deck/${card}.png`;
-             let id = "#card-" + idx;
+             let id = "#card-" + idx + '-content';
              $(id).attr("src", src);
          }
      }
@@ -243,7 +316,7 @@
          return code;
      }
 
-     function toggleAlert(msg){
+     function toggleAlert(msg) {
          $('#alert').html(msg);
          $('#alert').attr('hidden', false);
          $("#alert").fadeTo(2000, 500).slideUp(500, function() {
@@ -266,6 +339,12 @@
          let text = `Hacemos una partida del juegodelbus.es? El código de sala es: *${room_number}*`;
          let href = "whatsapp://send?text=" + text;
          window.location.href = href;
+     });
+
+     $('#pre-bus-cards').click(function() {
+         send({
+             'action': 'pre_bus_cards',
+         })
      });
 
      $('#menu-create').on('click', function() {
@@ -297,7 +376,7 @@
 
      $('#menu-join-btn').click(function() {
          room_number = $('#menu-room-number').val();
-         if (room_number == ''){
+         if (room_number == '') {
              toggleAlert('Número de sala requerido')
              return
          }
@@ -339,6 +418,7 @@
                      'answer_id': button_num
                  })
              } else if (action == 'answer_action') {
+                 $("#sound")[0].play();
                  if (last_one_correct) {
                      send({
                          'action': 'send_sip',

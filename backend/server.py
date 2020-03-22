@@ -34,6 +34,7 @@ class Game():
         ]
         self.remaining_cards = cards
         self.player_cards = {}
+        self.pre_bus_cards = []
 
     def _set_player_turn(self):
         self.turn = self.players[(self.turn_number - 1) % self.n_players]
@@ -43,6 +44,7 @@ class Game():
             self.sips[username]['received'] += 1 # TODO: fix this
         print('-'*50)
         print(self.turn_number)
+        action = None
         if self.turn_number < self.n_players:
             self.question_id = 0
             msg =  '¿Rojo o Negro?',
@@ -72,6 +74,7 @@ class Game():
             btn_2_text = '♥'
             btn_3_text = '♠'
         else:
+            action = 'start_pre_bus'
             self.question_id = 4
             msg = 'Clasificatoria para el bus'
             btn_0_text = None
@@ -79,9 +82,19 @@ class Game():
             btn_2_text = None
             btn_3_text = None
 
+        ### FAKE PART""
+        #if not self.player_cards[username]:
+        #    self.turn_number = 3* self.n_players
+        #    for i in range(3):
+        #        c = self._pick_random_card()
+        #        for u in self.players:
+        #            self.player_cards[u].append(c)
+        #action = 'pre_bus'
+
+        ###
         self._set_player_turn()
         to_return = {
-            'action': 'show_turn',
+            'action': action or 'show_turn',
             'btn_0_text': btn_0_text,
             'btn_1_text': btn_1_text,
             'btn_2_text': btn_2_text,
@@ -93,6 +106,7 @@ class Game():
         }
         self.turn_number += 1
         return to_return
+
 
     def _get_letter_from_card(self, card):
         return card[-1]
@@ -201,6 +215,47 @@ class Game():
         }
         return to_return
 
+    def _calculate_pre_bus_sips(self):
+        to_send = {}
+        for player in self.players:
+            prebus_player_cards = self.player_cards[player]
+            _round = 0
+            to_send[player] = {}
+            a = []
+            for card in self.pre_bus_cards:
+                to_send[player][_round] = 0
+                for c in prebus_player_cards:
+                    if (self._get_number_from_card(c) ==
+                            self._get_number_from_card(card) and (not c in a)):
+                        if _round < 2:
+                            to_add = 1
+                        elif _round < 4:
+                            to_add = 2
+                        elif _round < 6:
+                            to_add =  3
+                        elif _round < 8:
+                            to_add =  4
+                        to_send[player][_round] += to_add
+                        a.append(c)
+                _round += 1
+
+        return to_send
+
+    def calculate_pre_bus_cards(self):
+
+        for i in range(8):
+            card = self._pick_random_card()
+            self.pre_bus_cards.append(card)
+            self.turn_number += 1
+
+        to_return = {
+            'action': 'pre_bus_cards',
+            'all_cards_seen': self.player_cards,
+            'pre_bus_cards': self.pre_bus_cards,
+            'sips_to_send': self._calculate_pre_bus_sips()
+        }
+        return to_return
+
     def add_player(self, username):
         if username in self.players:
             raise Exception('Player already in room')
@@ -211,7 +266,7 @@ class Game():
         self.sips = {k: {'sent': 0, 'received': 0}  for k in self.players}
         self.player_cards = {k: [] for k in self.players}
         self._set_player_turn()
-        self.total_turns = 4 * self.n_players + 1
+        self.total_turns = 4 * self.n_players + 6 + 1
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -286,8 +341,13 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                         username, data['to'], data['amount']
                     )
                 )
-            else:
-                pass
+            elif action == 'pre_bus_cards':
+                if self.rooms[room]['game'].pre_bus_cards:
+                    return
+                self.notify_players_in_room(
+                    room,
+                    self.rooms[room]['game'].calculate_pre_bus_cards()
+                )
         except Exception as e:
             print('\n\nERROR')
             print(e)

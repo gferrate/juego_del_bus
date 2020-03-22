@@ -61,8 +61,17 @@ h1 {
     margin: auto;
 }
 
+.testt > *{
+  display: inline-block;
+}
+
+
 .v-center {
-    margin-top: 30vh;
+    margin-top: 15vh;
+}
+
+.card-prebus {
+    width: 3.5rem;
 }
 
 .v-center-2 {
