@@ -48,11 +48,12 @@
                          diffuminateCardInNav(i);
                      }
                  }
-                 var id = "#pre-bus-" + n_unfolded_prebus_cards.toString() + '-content';
+                 var id = "#pre-bus-" + n_unfolded_prebus_cards.toString();
                  let src = `static/img/deck/${card}.png`;
-                 $(id).attr("src", src);
-                 id = "#pre-bus-" + n_unfolded_prebus_cards.toString();
                  $(id).addClass("flip-scale-down-diag-2");
+                 setTimeout(function() {
+                     $(id).attr("src", src);
+                 }, 500 / 2);
                  if (sips_to_send_round > 0) {
                      acc_sips_user += sips_to_send_round;
                      let msg = `Envias ${acc_sips_user} sorbo`

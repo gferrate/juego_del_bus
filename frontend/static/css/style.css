@@ -83,7 +83,8 @@ h1 {
 }
 
 .card-class {
-    height: 15rem;
+    max-height: 15rem;
+    width: auto;
 }
 
 .card-bus {
