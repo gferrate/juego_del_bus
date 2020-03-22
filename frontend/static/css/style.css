@@ -82,8 +82,8 @@ h1 {
     width: 5rem;
 }
 
-.card {
-    width: 15rem;
+.card-class {
+    height: 15rem;
 }
 
 .card-bus {
@@ -118,12 +118,12 @@ h1 {
 
 @keyframes flip-scale-down-diag-2 {
     0% {
-        transform: scale(1) rotate3d(-1, 1, 0, 0deg);
+        transform: scale(1) rotate3d(0, 1, 0, 0deg);
     }
     50% {
-        transform: scale(0.4) rotate3d(-1, 1, 0, -90deg);
+        transform: scale(0.4) rotate3d(0, 1, 0, -90deg);
     }
     100% {
-        transform: scale(1) rotate3d(-1, 1, 0, 0deg);
+        transform: scale(1) rotate3d(0, 1, 0, 0deg);
     }
 }

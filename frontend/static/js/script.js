@@ -35,8 +35,7 @@
          return getNumberOfCard(c1) == getNumberOfCard(c2);
      }
 
-     function preBusDone(){
-     }
+     function preBusDone() {}
 
      function unFoldPreBusCards(pre_bus_cards, sips_to_send) {
          setTimeout(function() {
@@ -53,7 +52,7 @@
                  let src = `static/img/deck/${card}.png`;
                  $(id).attr("src", src);
                  id = "#pre-bus-" + n_unfolded_prebus_cards.toString();
-                 $(id).flip(true);
+                 $(id).addClass("flip-scale-down-diag-2");
                  if (sips_to_send_round > 0) {
                      acc_sips_user += sips_to_send_round;
                      let msg = `Envias ${acc_sips_user} sorbo`
@@ -73,7 +72,7 @@
      socket.onopen = function() {
          console.log('Connected!');
      };
-     for (var i = 0; i <= 7; i++) {
+     /*for (var i = 0; i <= 7; i++) {
          var id = `#card-${i}`;
          $(id).flip({
              'trigger': 'manual'
@@ -82,7 +81,7 @@
          $(id).flip({
              'trigger': 'manual'
          });
-     }
+     }*/
      socket.onmessage = function(event) {
          let dataReceived = JSON.parse(event.data);
          action = dataReceived.action;
@@ -99,7 +98,7 @@
              var cards_to_show = dataReceived.all_cards_seen[dataReceived.turn];
              cards_to_show.push('back');
              var id = "#card-" + (cards_to_show.length - 1).toString()
-             $(id).flip(false);
+             $(id).removeClass("flip-scale-down-diag-2");
              showCards(cards_to_show);
              msg = dataReceived.msg;
              turn = dataReceived.turn;
@@ -134,8 +133,10 @@
              var all_cards_seen = dataReceived.all_cards_seen;
              var cards_to_show = all_cards_seen[dataReceived.turn];
              var id = "#card-" + (cards_to_show.length - 1).toString()
-             showCards(cards_to_show);
-             $(id).flip(true);
+             $(id).addClass("flip-scale-down-diag-2");
+             setTimeout(function() {
+                 showCards(cards_to_show);
+             }, 500 / 2);
              showNavCards(all_cards_seen[username]);
              if (dataReceived.is_correct) {
                  addPlayersToButtons(dataReceived.players);
@@ -265,6 +266,14 @@
              $('#card-1').parent().attr('hidden', false);
              $('#card-2').parent().attr('hidden', false);
              $('#card-3').parent().attr('hidden', false);
+
+             /*for (i = 0; i < n; i++) {
+                 let id = `#card-${i}`
+                 $(id).attr('hidden', false);
+             }
+             for (i = n; i < 4; i++) {
+                 let id = `#card-${i}`
+                 $(id).attr('hidden', true);*/
          }
      }
 
@@ -295,7 +304,7 @@
          for (idx in cards) {
              card = cards[idx];
              let src = `static/img/deck/${card}.png`;
-             let id = "#card-" + idx + '-content';
+             let id = "#card-" + idx;
              $(id).attr("src", src);
          }
      }
