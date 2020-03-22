@@ -17,6 +17,7 @@
      var n_unfolded_prebus_cards = 0;
      var acc_sips_user = 0;
      var navbar_cards = [];
+     var used_pre_bus_sips = 0;
 
      function diffuminateCardInNav(i) {
          console.log(card)
@@ -35,7 +36,35 @@
          return getNumberOfCard(c1) == getNumberOfCard(c2);
      }
 
-     function preBusDone() {}
+     function preBusDone() {
+         console.log(acc_sips_user);
+         players_filtered = players.filter(e => e !== username);
+         if (acc_sips_user > 0) {
+             for (player of players_filtered) {
+                 var input = `<div class="d-flex justify-content-center flex-row w-100 mt-2">
+                 <div class="input-group" style="width:10rem;">
+                     <div class="input-group-prepend">
+                         <button data-player="${player}" class="btn btn-dark decrement-sip" type="button"><i class="fa fa-minus"></i></button>
+                     </div>
+                     <input data-player="${player}" type="text" value="0" inputmode="decimal" style="text-align: center; width: 2rem" class="form-control sip-input" placeholder="Sorbos" >
+                     <div class="input-group-append">
+                         <button data-player="${player}" class="btn btn-dark increment-sip" type="button"><i class="fa fa-plus"></i></button>
+                     </div>
+                 </div>
+                 <span class="ml-3 pt-2">${player}</span>
+                 </div>`
+                 console.log(acc_sips_user);
+                 $('#pre-bus').append(input);
+             }
+             var btn = `<button id="send-pre-bus-sips" type="button" class="btn btn-dark mt-3" >Envía</button>`;
+             $('#pre-bus').append(btn);
+         }
+
+         /*send({
+             'action': 'pre_bus_done',
+             'pre_bus_sips': acc_sips_user,
+         });*/
+     }
 
      function unFoldPreBusCards(pre_bus_cards, sips_to_send) {
          setTimeout(function() {
@@ -56,16 +85,15 @@
                  }, 500 / 2);
                  if (sips_to_send_round > 0) {
                      acc_sips_user += sips_to_send_round;
-                     let msg = `Envias ${acc_sips_user} sorbo`
-                     if (acc_sips_user > 1) {
-                         msg += 's'
-                     }
-                     $('#question-pre-bus-2').html(msg);
                  }
-                 if (sips_to_send_round == 7) {
-                     preBusDone()
+                 let msg = `Envias ${acc_sips_user} sorbo`
+                 if (acc_sips_user > 1 || acc_sips_user == 0) {
+                     msg += 's'
                  }
+                 $('#question-pre-bus-2').html(msg);
                  unFoldPreBusCards(pre_bus_cards, sips_to_send);
+             } else {
+                 preBusDone()
              }
              n_unfolded_prebus_cards += 1;
          }, 1000);
@@ -357,6 +385,37 @@
          })
      });
 
+     function getTotalInputSips() {
+         var tot = 0;
+         $('.sip-input').each(function() {
+             tot += parseInt($(this).val());
+         });
+         return tot
+     }
+
+     $(document.body).on('click', '.increment-sip', function() {
+         console.log('increment');
+         var usr = $(this).data('player');
+         var input = $('input').filter(`[data-player="${usr}"]`);
+         var total = getTotalInputSips();
+         var val = parseInt(input.val());
+         console.log(val);
+         if (total < acc_sips_user) {
+             input.val(val + 1);
+         }
+     });
+
+     $(document.body).on('click', '.decrement-sip', function() {
+         console.log('dec');
+         var usr = $(this).data('player');
+         var input = $('input').filter(`[data-player="${usr}"]`);
+         var val = parseInt(input.val());
+         console.log(val);
+         if (val > 0) {
+             input.val(val - 1);
+         }
+     });
+
      $('#menu-create').on('click', function() {
          if (!verifyUsername()) {
              return
@@ -405,11 +464,17 @@
          });
      });
 
-     $('#test').click(function() {
-         send({
-             'action': 'send_message',
-             'msg': 'hahaa'
-         })
+     $(document.body).on('click', '#send-pre-bus-sips', function() {
+         var total = getTotalInputSips();
+         if (total < acc_sips_user) {
+             toggleAlert('Tienes que repartir todos los sorbos');
+             return
+         } else {
+             send({
+                 'action': 'send_sips',
+                 'falta': 'aaa',
+             });
+         }
      });
 
      $('#answer-0, #answer-1, #answer-2, #answer-3').on('click', function() {
