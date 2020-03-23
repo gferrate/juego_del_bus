@@ -1,4 +1,6 @@
  $(document).ready(function() {
+
+
      var username;
      var current_question = 0;
      var room_number;
@@ -13,6 +15,16 @@
          '9S', 'AC', 'AD', 'AH', 'AS', 'JC', 'JD', 'JH', 'JS', 'KC', 'KD', 'KH',
          'KS', 'QC', 'QD', 'QH', 'QS'
      ];
+
+     // PRELOAD IMAGES
+     var loadedimages = new Array();
+     for (var i = 0; i < cards.length; i++) {
+         let card = cards[i];
+         let src = `static/img/deck/${card}.png`;
+         loadedimages[i] = new Image();
+         loadedimages[i].src = src;
+     }
+
      var socket = new WebSocket('ws://192.168.1.129:7777');
      var n_unfolded_prebus_cards = 0;
      var acc_sips_user = 0;
