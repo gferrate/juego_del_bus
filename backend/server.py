@@ -10,6 +10,7 @@ import json
 import logging
 import random
 from ratelimit import limits
+from math import ceil
 
 
 log = logging.getLogger('')
@@ -35,6 +36,9 @@ class Game():
         self.remaining_cards = cards
         self.player_cards = {}
         self.pre_bus_cards = []
+        self.pre_bus_sips_sent = {}
+        self.pre_bus_players_drunk = []
+        self.bus_loser = None
 
     def _set_player_turn(self):
         self.turn = self.players[(self.turn_number - 1) % self.n_players]
@@ -227,19 +231,32 @@ class Game():
                 for c in prebus_player_cards:
                     if (self._get_number_from_card(c) ==
                             self._get_number_from_card(card) and (not c in a)):
-                        if _round < 2:
-                            to_add = 1
-                        elif _round < 4:
-                            to_add = 2
-                        elif _round < 6:
-                            to_add =  3
-                        elif _round < 8:
-                            to_add =  4
-                        to_send[player][_round] += to_add
+                        to_send[player][_round] += ceil((_round+1)/2)
                         a.append(c)
                 _round += 1
 
         return to_send
+
+    def _calculate_pre_bus_loser(self):
+        # TODO: Classifaction for this
+        player_cards_unrevealed = {p: 0 for p in self.players}
+        for player in self.players:
+            prebus_player_cards = self.player_cards[player]
+            prebus_player_numbers = [
+                self._get_number_from_card(c) for c in
+                self.player_cards[player]
+            ]
+            for card in self.pre_bus_cards:
+                num = self._get_number_from_card(card)
+                if num in prebus_player_numbers:
+                    player_cards_unrevealed[player] += 1
+                    prebus_player_numbers.remove(num)
+
+        max_ = max(player_cards_unrevealed.values())
+        for player, amount in player_cards_unrevealed.items():
+            if amount == max_:
+                self.bus_loser = player
+                return
 
     def calculate_pre_bus_cards(self):
 
@@ -248,6 +265,7 @@ class Game():
             self.pre_bus_cards.append(card)
             self.turn_number += 1
 
+        self._calculate_pre_bus_loser()
         to_return = {
             'action': 'pre_bus_cards',
             'all_cards_seen': self.player_cards,
@@ -255,6 +273,70 @@ class Game():
             'sips_to_send': self._calculate_pre_bus_sips()
         }
         return to_return
+
+    def _all_pre_bus_sips_sent(self):
+        sent = self.pre_bus_sips_sent.keys()
+        for p in self.players:
+            if p not in sent:
+                return False
+        return True
+
+    def _get_missing_pre_bus_sips_players(self):
+        sent = self.pre_bus_sips_sent.keys()
+        return [p for p in self.players if p not in sent]
+
+    def _fill_pre_bus_sips(self, sips):
+        for p in self.players:
+            if p not in sips.keys():
+                sips[p] = 0
+        return sips
+
+    def _get_unified_pre_bus_sips(self):
+        unified_sips = {k: 0 for k in self.players}
+        for to, sips_dict in self.pre_bus_sips_sent.items():
+            for to, n in sips_dict.items():
+                unified_sips[to] += n
+        return unified_sips
+
+    def _all_players_have_drunk(self):
+        for p in self.players:
+            if p not in self.pre_bus_players_drunk:
+                return False
+        return True
+
+    def _get_missing_pre_bus_players_to_drink(self):
+        return [p for p in self.players if p not in self.pre_bus_players_drunk]
+
+    def send_pre_bus_sips(self, username, sips):
+        sips = self._fill_pre_bus_sips(sips)
+        self.pre_bus_sips_sent[username] = sips
+        for to, amount in sips.items():
+            self.sips[username]['sent'] += amount
+            self.sips[to]['received'] += amount
+        if self._all_pre_bus_sips_sent():
+            unified_sips = self._get_unified_pre_bus_sips()
+            return {
+                'action': 'drink_pre_bus_sips',
+                'unified_sips': self._get_unified_pre_bus_sips()
+            }
+        else:
+            return {
+                'action': 'wait_all_pre_bus_sips',
+                'missing': self._get_missing_pre_bus_sips_players()
+            }
+
+    def pre_bus_sips_drunk(self, username):
+        self.pre_bus_players_drunk.append(username)
+        if self._all_players_have_drunk():
+            return {
+                'action': 'pre_bus_all_players_drunk',
+                'loser': self.bus_loser
+            }
+        else:
+            return {
+                'action': 'pre_bus_waiting_all_players_drink',
+                'missing': self._get_missing_pre_bus_players_to_drink()
+            }
 
     def add_player(self, username):
         if username in self.players:
@@ -279,7 +361,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         log.info('Connection to client opened')
 
-    @limits(calls=1000, period=1)
+    #@limits(calls=1000, period=1)
     def notify_players_in_room(self, room, msg='test'):
         print(msg)
         if msg == 'test':
@@ -350,9 +432,18 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                     self.rooms[room]['game'].calculate_pre_bus_cards()
                 )
 
-            elif action == 'pre_bus_done':
-                sips_pre_bus
-                pass
+            elif action == 'send_pre_bus_sips':
+                self.notify_players_in_room(
+                    room,
+                    self.rooms[room]['game'].send_pre_bus_sips(
+                        username, data['sips']
+                    )
+                )
+            elif action == 'pre_bus_sips_drunk':
+                self.notify_players_in_room(
+                    room,
+                    self.rooms[room]['game'].pre_bus_sips_drunk(username)
+                )
         except Exception as e:
             print('\n\nERROR')
             print(e)

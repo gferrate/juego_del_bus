@@ -32,12 +32,10 @@
      var used_pre_bus_sips = 0;
 
      function diffuminateCardInNav(i) {
-         console.log(card)
          var id = "#nav-card-" + i.toString();
          $(id).css({
              'opacity': 0.5
          });
-         console.log(id)
      }
 
      function getNumberOfCard(card) {
@@ -49,33 +47,34 @@
      }
 
      function preBusDone() {
-         console.log(acc_sips_user);
          players_filtered = players.filter(e => e !== username);
          if (acc_sips_user > 0) {
              for (player of players_filtered) {
-                 var input = `<div class="d-flex justify-content-center flex-row w-100 mt-2">
+                 var input = `<div class="d-flex justify-content-center flex-row w-100 mt-2 sip-selector">
                  <div class="input-group" style="width:10rem;">
                      <div class="input-group-prepend">
-                         <button data-player="${player}" class="btn btn-dark decrement-sip" type="button"><i class="fa fa-minus"></i></button>
+                         <button data-player="${player}" class="btn btn-dark decrement-sip" type="button">
+                         <i class="fa fa-minus"></i></button>
                      </div>
-                     <input data-player="${player}" type="text" value="0" inputmode="decimal" style="text-align: center; width: 2rem" class="form-control sip-input" placeholder="Sorbos" >
+                     <input data-player="${player}" type="text" value="0" inputmode="decimal"
+                     style="text-align: center; width: 2rem" class="form-control sip-input" placeholder="Sorbos" >
                      <div class="input-group-append">
-                         <button data-player="${player}" class="btn btn-dark increment-sip" type="button"><i class="fa fa-plus"></i></button>
+                         <button data-player="${player}" class="btn btn-dark increment-sip" type="button">
+                         <i class="fa fa-plus"></i></button>
                      </div>
                  </div>
                  <span class="ml-3 pt-2">${player}</span>
                  </div>`
-                 console.log(acc_sips_user);
-                 $('#pre-bus').append(input);
+                 $('#pre-bus-buttons').append(input);
              }
-             var btn = `<button id="send-pre-bus-sips" type="button" class="btn btn-dark mt-3" >Envía</button>`;
-             $('#pre-bus').append(btn);
+             var btn = `<button id="send-pre-bus-sips" type="button" class="btn btn-dark mt-3 sip-selector">Envía</button>`;
+             $('#pre-bus-buttons').append(btn);
+         } else {
+             send({
+                 'action': 'send_pre_bus_sips',
+                 'sips': {}
+             });
          }
-
-         /*send({
-             'action': 'pre_bus_done',
-             'pre_bus_sips': acc_sips_user,
-         });*/
      }
 
      function unFoldPreBusCards(pre_bus_cards, sips_to_send) {
@@ -98,7 +97,7 @@
                  if (sips_to_send_round > 0) {
                      acc_sips_user += sips_to_send_round;
                  }
-                 let msg = `Envias ${acc_sips_user} sorbo`
+                 let msg = `Envías ${acc_sips_user} sorbo`
                  if (acc_sips_user > 1 || acc_sips_user == 0) {
                      msg += 's'
                  }
@@ -219,6 +218,64 @@
              var pre_bus_cards = dataReceived.pre_bus_cards;
              var sips_to_send = dataReceived.sips_to_send;
              unFoldPreBusCards(pre_bus_cards, sips_to_send)
+         } else if (action == 'wait_all_pre_bus_sips') {
+             console.log(action);
+             let missing = dataReceived.missing;
+             let missing_str = missing.join(', ');
+             if (!missing.includes(username)) {
+                 hidePreBusButtons();
+                 $('#question-pre-bus-2').html(`Esperando a que se envíen los sorbos. Faltan: ${missing_str}`);
+             }
+         } else if (action == 'drink_pre_bus_sips') {
+             hidePreBusButtons();
+             console.log(action);
+             let unified_sips = dataReceived.unified_sips;
+             var msg = '';
+             for (const [to, amount] of Object.entries(unified_sips)) {
+                 console.log(to, amount);
+                 if (to == username) {
+                     msg += `Bebes ${amount} sorbo`;
+                     if (amount != 1) {
+                         msg += 's';
+                     }
+                     msg += '</br>';
+                 } else {
+                     msg += `${to} bebe ${amount} sorbo`
+                     if (amount != 1) {
+                         msg += 's';
+                     }
+                     msg += '</br>';
+                 }
+             }
+             $('#question-pre-bus-2').html(msg);
+             var usr_amount = unified_sips[username];
+             if (usr_amount > 0) {
+                 if (usr_amount == 1) {
+                     var btn_msg = 'Sorbo bebido. Continuar';
+                 } else {
+                     var btn_msg = 'Sorbos bebidos. Continuar';
+                 }
+                 $('#pre-bus-cards').html(btn_msg);
+                 $('#pre-bus-cards').attr('hidden', false);
+             }else {
+                 send({
+                     'action': 'pre_bus_sips_drunk'
+                 });
+             }
+         } else if (action == 'pre_bus_waiting_all_players_drink') {
+             console.log(action);
+             if (!dataReceived.missing.includes(username)){
+                 var msg = `Esperando a que ${dataReceived.missing.join(', ')} beba`;
+                 if (dataReceived.missing.length > 1){
+                     msg += 'n';
+                 }
+                 $('#question-pre-bus-2').html(msg);
+             }
+         } else if (action == 'pre_bus_all_players_drunk') {
+             console.log(action);
+             $('#pre-bus-cards').attr('hidden', true);
+             var msg = `${dataReceived.loser} va al bus...`;
+             $('#question-pre-bus-2').html(msg);
          }
      };
      socket.onclose = function() {
@@ -232,6 +289,10 @@
          msg['room'] = room_number
          msg['username'] = username
          socket.send(JSON.stringify(msg));
+     }
+
+     function hidePreBusButtons() {
+         $('#pre-bus-buttons').attr('hidden', true);
      }
 
      function disableButtons() {
@@ -392,9 +453,16 @@
      });
 
      $('#pre-bus-cards').click(function() {
-         send({
-             'action': 'pre_bus_cards',
-         })
+         if (action == 'drink_pre_bus_sips' || action == 'pre_bus_waiting_all_players_drink') {
+             send({
+                 'action': 'pre_bus_sips_drunk',
+             });
+             $('#pre-bus-cards').attr('hidden', true);
+         } else {
+             send({
+                 'action': 'pre_bus_cards',
+             });
+         }
      });
 
      function getTotalInputSips() {
@@ -405,24 +473,29 @@
          return tot
      }
 
+     function getTotalInputSipsDict() {
+         var sips_dict = {};
+         $('.sip-input').each(function() {
+             let p = $(this).data('player');
+             sips_dict[p] = parseInt($(this).val());
+         });
+         return sips_dict
+     }
+
      $(document.body).on('click', '.increment-sip', function() {
-         console.log('increment');
          var usr = $(this).data('player');
          var input = $('input').filter(`[data-player="${usr}"]`);
          var total = getTotalInputSips();
          var val = parseInt(input.val());
-         console.log(val);
          if (total < acc_sips_user) {
              input.val(val + 1);
          }
      });
 
      $(document.body).on('click', '.decrement-sip', function() {
-         console.log('dec');
          var usr = $(this).data('player');
          var input = $('input').filter(`[data-player="${usr}"]`);
          var val = parseInt(input.val());
-         console.log(val);
          if (val > 0) {
              input.val(val - 1);
          }
@@ -483,8 +556,8 @@
              return
          } else {
              send({
-                 'action': 'send_sips',
-                 'falta': 'aaa',
+                 'action': 'send_pre_bus_sips',
+                 'sips': getTotalInputSipsDict()
              });
          }
      });
@@ -505,7 +578,7 @@
                      'answer_id': button_num
                  })
              } else if (action == 'answer_action') {
-                 $("#sound")[0].play();
+                 //$("#sound")[0].play();
                  if (last_one_correct) {
                      send({
                          'action': 'send_sip',
