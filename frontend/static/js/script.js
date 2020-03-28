@@ -122,7 +122,7 @@
                  preBusDone()
              }
              n_unfolded_prebus_cards += 1;
-         }, 3000);
+         }, 2000);
      }
      socket.onopen = function() {
          console.log('Connected!');
