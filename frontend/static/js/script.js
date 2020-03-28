@@ -135,7 +135,6 @@
              players = dataReceived.players;
              notifyPlayers(dataReceived.players);
          } else if (action == 'show_turn') {
-             console.log('show_turn');
              current_question = dataReceived.question_id;
              $('#menu').attr('hidden', true);
              $('#questions').attr('hidden', false);
@@ -162,7 +161,6 @@
                  disableButtons();
              }
          } else if (action == 'answer_action') {
-             console.log('answer_action');
              msg = dataReceived.msg;
              msg_2 = dataReceived.msg_2;
              turn = dataReceived.turn;
@@ -200,7 +198,6 @@
          } else if (action == 'answered') {
              //pass
          } else if (action == 'notify_sip') {
-             console.log('notify_sip');
              msg = dataReceived.msg;
              msg_others = dataReceived.msg_others;
              msg_others_2 = dataReceived.msg_others_2;
@@ -225,7 +222,6 @@
              var sips_to_send = dataReceived.sips_to_send;
              unFoldPreBusCards(pre_bus_cards, sips_to_send)
          } else if (action == 'wait_all_pre_bus_sips') {
-             console.log(action);
              let missing = dataReceived.missing;
              let missing_str = missing.join(', ');
              if (!missing.includes(username)) {
@@ -234,11 +230,9 @@
              }
          } else if (action == 'drink_pre_bus_sips') {
              hidePreBusButtons();
-             console.log(action);
              let unified_sips = dataReceived.unified_sips;
              var msg = '';
              for (const [to, amount] of Object.entries(unified_sips)) {
-                 console.log(to, amount);
                  if (to == username) {
                      msg += `Bebes ${amount} sorbo`;
                      if (amount != 1) {
@@ -269,7 +263,6 @@
                  });
              }
          } else if (action == 'pre_bus_waiting_all_players_drink') {
-             console.log(action);
              if (!dataReceived.missing.includes(username)) {
                  var msg = `Esperando a que ${dataReceived.missing.join(', ')} beba`;
                  if (dataReceived.missing.length > 1) {
@@ -278,7 +271,6 @@
                  $('#question-pre-bus-2').html(msg);
              }
          } else if (action == 'pre_bus_all_players_drunk') {
-             console.log(action);
              $('#pre-bus-cards').attr('hidden', true);
              var msg = `${dataReceived.loser} va al bus...`;
              $('#question-pre-bus-2').html(msg);
@@ -321,6 +313,7 @@
              makeClickableCurrentRow();
              updateBusQuestion();
          } else if (action == 'notify_incorrect_bus_answer') {
+             currentBusCardFlipped = true
              //makeClickableAllRows();
              let sips_to_drink = dataReceived.sips_to_drink;
              var msg_button = 'Sorbo bebido. Continuar';
@@ -333,7 +326,6 @@
              }
              $('#question-bus').html(msg);
              $('#bus-button').attr('hidden', true);
-             currentBusCardFlipped = true
 
              setTimeout(function() {
                  coverAllCards();
@@ -343,22 +335,19 @@
                  } else {
                      $('#question-bus-2').html(msg_2);
                  }
-                 currentBusCardFlipped = false
+                 //currentBusCardFlipped = false
                  currentBusRow = 0;
                  makeClickableCurrentRow();
-             }, 2000);
+             }, 5000);
          } else if (action == 'notify_win') {
-             console.log(dataReceived.stats);
              var msg = `${loser} ha salido del bus!`;
              $('#question-bus').html(msg);
              $('#bus-button').attr('hidden', true);
-             console.log(dataReceived);
 
              setTimeout(function() {
                  $('#bus').attr('hidden', true);
                  var msg = '';
                  for (const [user, values] of Object.entries(dataReceived.stats)) {
-                     console.log(user, values);
                      msg += `${user} ha enviado ${values['sent']} sorbos y ha recibido ${values['received']}</br>`;
                  }
                  $('#stats-2').html(msg);
@@ -616,6 +605,7 @@
                  'action': 'bus_sips_drunk'
              });
          }
+         currentBusCardFlipped = false
          $(this).attr('hidden', true);
      });
 
