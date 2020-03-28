@@ -6,6 +6,7 @@
      var last_one_correct;
      var action = null;
      var loser = null;
+     var game_has_finished = false;
      var currentBusRow = 0;
      var currentBusCard = null;
      var currentBusCardId = null;
@@ -139,7 +140,7 @@
      socket.onmessage = function(event) {
          let dataReceived = JSON.parse(event.data);
          action = dataReceived.action;
-         if (action == 'chao'){
+         if (action == 'chao') {
              somethingWentWrong();
          }
          if (action == 'notify_players') {
@@ -367,20 +368,23 @@
                  }
                  $('#stats-2').html(msg);
                  $('#stats').attr('hidden', false);
+                 game_has_finished = true;
              }, 3000);
          }
      };
 
      function somethingWentWrong() {
-         $('#menu').attr('hidden', true);
-         $('#questions').attr('hidden', true);
-         $('#pre-bus').attr('hidden', true);
-         $('#pre').attr('hidden', true);
-         toggleAlert(
-             'Algo ha ido mal. Seguramente un participante ha salido de la sala.',
-             true
-         );
-         $('#something_went_wrong').attr('hidden', false);
+         if (!game_has_finished) {
+             $('#menu').attr('hidden', true);
+             $('#questions').attr('hidden', true);
+             $('#pre-bus').attr('hidden', true);
+             $('#pre').attr('hidden', true);
+             toggleAlert(
+                 'Algo ha ido mal. Seguramente un participante ha salido de la sala.',
+                 true
+             );
+             $('#something_went_wrong').attr('hidden', false);
+         }
      }
 
      socket.onclose = function() {
