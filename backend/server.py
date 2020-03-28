@@ -11,6 +11,7 @@ import logging
 import random
 from ratelimit import limits
 from math import ceil
+import operator
 
 
 log = logging.getLogger('')
@@ -26,19 +27,20 @@ class Game():
         self.question_id = None
         self.total_turns = None
         self.turn = None
-        cards = [
+        self.cards = [
             '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D',
             '3H', '3S', '4C', '4D', '4H', '4S', '5C', '5D', '5H', '5S', '6C',
             '6D', '6H', '6S', '7C', '7D', '7H', '7S', '8C', '8D', '8H', '8S',
             '9C', '9D', '9H', '9S', 'AC', 'AD', 'AH', 'AS', 'JC', 'JD', 'JH',
             'JS', 'KC', 'KD', 'KH', 'KS', 'QC', 'QD', 'QH', 'QS'
         ]
-        self.remaining_cards = cards
+        self._mix_cards()
         self.player_cards = {}
         self.pre_bus_cards = []
         self.pre_bus_sips_sent = {}
         self.pre_bus_players_drunk = []
         self.bus_loser = None
+        self.bus_cards = []
 
     def _set_player_turn(self):
         self.turn = self.players[(self.turn_number - 1) % self.n_players]
@@ -252,9 +254,9 @@ class Game():
                     player_cards_unrevealed[player] += 1
                     prebus_player_numbers.remove(num)
 
-        max_ = max(player_cards_unrevealed.values())
+        min_ = min(player_cards_unrevealed.values())
         for player, amount in player_cards_unrevealed.items():
-            if amount == max_:
+            if amount == min_:
                 self.bus_loser = player
                 return
 
@@ -337,6 +339,53 @@ class Game():
                 'action': 'pre_bus_waiting_all_players_drink',
                 'missing': self._get_missing_pre_bus_players_to_drink()
             }
+
+    def notify_bus_selection(self, username, card_id):
+        card = self.bus_cards[-1]
+        num = card[:-1]
+        if num in ('J', 'Q', 'K', 'A'):
+            is_number = False
+        else:
+            is_number = True
+        self.bus_cards.append(self._pick_random_card())
+        return {
+            'action': 'notify_bus_selection',
+            'card': card,
+            'is_number': is_number,
+            'card_id': card_id
+        }
+
+    def _mix_cards(self):
+        self.remaining_cards = self.cards
+
+    def next_bus_card(self):
+        card = self._pick_random_card()
+        self.bus_cards.append(card)
+        return {
+            'action': 'next_bus_card',
+            'loser': self.bus_loser
+        }
+
+    def start_bus(self):
+        self._mix_cards()
+        return self.next_bus_card()
+
+    def notify_incorrect_bus_answer(self, username, sips_to_drink):
+        self.sips[self.bus_loser]['received'] += sips_to_drink
+        return {
+            'action': 'notify_incorrect_bus_answer',
+            'sips_to_drink': sips_to_drink,
+        }
+
+    #def _get_mvp(self):
+    #    return max(stats.items(), key=operator.itemgetter(1))[0]
+
+    def win(self):
+        return {
+            'action': 'notify_win',
+            'stats': self.sips,
+            #'mvp': self._get_mvp()
+        }
 
     def add_player(self, username):
         if username in self.players:
@@ -441,9 +490,34 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 )
             elif action == 'pre_bus_sips_drunk':
                 self.notify_players_in_room(
-                    room,
-                    self.rooms[room]['game'].pre_bus_sips_drunk(username)
+                    room, self.rooms[room]['game'].pre_bus_sips_drunk(username)
                 )
+            elif action == 'start_bus':
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].start_bus()
+                )
+            elif action == 'notify_bus_selection':
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].notify_bus_selection(
+                        username, data['card_id']
+                    )
+                )
+            elif action == 'notify_incorrect_bus_answer':
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].notify_incorrect_bus_answer(
+                        username, data['sips_to_drink']
+                    )
+                )
+            elif action == 'bus_sips_drunk':
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].next_bus_card()
+                )
+
+            elif action == 'win':
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].win()
+                )
+
         except Exception as e:
             print('\n\nERROR')
             print(e)

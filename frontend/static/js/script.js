@@ -7,6 +7,12 @@
      var players;
      var last_one_correct;
      var action = null;
+     var loser = null;
+     var currentBusRow = 0;
+     var currentBusCard = null;
+     var currentBusCardId = null;
+     var currentBusCardIsNum = false;
+     var currentBusCardFlipped = false;
      //clubs (♣), diamonds (♦), hearts (♥) and spades (♠),
      var cards = [
          '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D', '3H',
@@ -257,16 +263,16 @@
                  }
                  $('#pre-bus-cards').html(btn_msg);
                  $('#pre-bus-cards').attr('hidden', false);
-             }else {
+             } else {
                  send({
                      'action': 'pre_bus_sips_drunk'
                  });
              }
          } else if (action == 'pre_bus_waiting_all_players_drink') {
              console.log(action);
-             if (!dataReceived.missing.includes(username)){
+             if (!dataReceived.missing.includes(username)) {
                  var msg = `Esperando a que ${dataReceived.missing.join(', ')} beba`;
-                 if (dataReceived.missing.length > 1){
+                 if (dataReceived.missing.length > 1) {
                      msg += 'n';
                  }
                  $('#question-pre-bus-2').html(msg);
@@ -276,14 +282,115 @@
              $('#pre-bus-cards').attr('hidden', true);
              var msg = `${dataReceived.loser} va al bus...`;
              $('#question-pre-bus-2').html(msg);
+             if (dataReceived.loser == username) {
+                 $('#pre-bus-cards').html('Estoy preparado...');
+                 $('#pre-bus-cards').attr('hidden', false);
+             }
+         } else if (action == 'next_bus_card') {
+             $('#nav-cards').attr('hidden', true);
+             loser = dataReceived.loser;
+             makeClickableCurrentRow();
+             updateBusQuestion();
+             currentBusCardFlipped = false;
+             $('#pre-bus').attr('hidden', true);
+             $('#bus').attr('hidden', false);
+         } else if (action == 'notify_bus_selection') {
+             $('#bus-button').attr('hidden', true);
+             currentBusCardFlipped = false;
+             currentBusCard = dataReceived.card;
+             currentBusCardIsNum = dataReceived.is_number;
+             var card_id = dataReceived.card_id
+             showBusCard(card_id);
+             if (!currentBusCardIsNum) {
+                 //currentBusCardFlipped = false;
+                 if (loser == username) {
+                     send({
+                         'action': 'notify_incorrect_bus_answer',
+                         'sips_to_drink': currentBusRow + 1
+                     });
+                 }
+             } else if (currentBusCardIsNum && currentBusRow == 4) {
+                 if (loser == username) {
+                     send({
+                         'action': 'win'
+                     });
+                 }
+             } else {
+                 currentBusRow += 1;
+             }
+             makeClickableCurrentRow();
+             updateBusQuestion();
+         } else if (action == 'notify_incorrect_bus_answer') {
+             //makeClickableAllRows();
+             let sips_to_drink = dataReceived.sips_to_drink;
+             var msg_button = 'Sorbo bebido. Continuar';
+             var msg = `Es una figura! ${loser}, bebes ${sips_to_drink} sorbo`;
+             var msg_2 = `Esperando a que ${loser} se beba el sorbo...`;
+             if (sips_to_drink > 1) {
+                 msg += 's';
+                 msg_button = 'Sorbos bebidos. Continuar';
+                 msg_2 = `Esperando a que ${loser} beba los ${sips_to_drink} sorbos...`;
+             }
+             $('#question-bus').html(msg);
+             $('#bus-button').attr('hidden', true);
+             currentBusCardFlipped = true
+
+             setTimeout(function() {
+                 coverAllCards();
+                 if (loser == username) {
+                     $('#bus-button').html(msg_button);
+                     $('#bus-button').attr('hidden', false);
+                 } else {
+                     $('#question-bus-2').html(msg_2);
+                 }
+                 currentBusCardFlipped = false
+                 currentBusRow = 0;
+                 makeClickableCurrentRow();
+             }, 2000);
+         } else if (action == 'notify_win') {
+             console.log(dataReceived.stats);
+             var msg = `${loser} ha salido del bus!`;
+             $('#question-bus').html(msg);
+             $('#bus-button').attr('hidden', true);
+             console.log(dataReceived);
+
+             setTimeout(function() {
+                 $('#bus').attr('hidden', true);
+                 var msg = '';
+                 for (const [user, values] of Object.entries(dataReceived.stats)) {
+                     console.log(user, values);
+                     msg += `${user} ha enviado ${values['sent']} sorbos y ha recibido ${values['received']}</br>`;
+                 }
+                 $('#stats-2').html(msg);
+                 $('#stats').attr('hidden', false);
+             }, 2000);
          }
      };
+
      socket.onclose = function() {
          console.log('Lost connection!');
      };
      socket.onerror = function() {
          console.log('error');
      };
+
+     function updateBusQuestion() {
+         if (currentBusRow == 0) {
+             var msg = `${loser}, clicka una carta de la fila de abajo`
+         } else if (currentBusRow == 1 || currentBusRow == 2 || currentBusRow == 3) {
+             if (currentBusRow == 1) {
+                 var num_str = 'cuarta';
+             } else if (currentBusRow == 2) {
+                 var num_str = 'tercera';
+             } else if (currentBusRow == 3) {
+                 var num_str = 'segunda';
+             }
+             var msg = `${loser}, clicka una carta de la ${num_str} fila`
+         } else {
+             var msg = `${loser}, clicka una carta de la fila de arriba`
+         }
+         $('#question-bus').html(msg);
+     }
 
      function send(msg) {
          msg['room'] = room_number
@@ -293,6 +400,48 @@
 
      function hidePreBusButtons() {
          $('#pre-bus-buttons').attr('hidden', true);
+     }
+
+     function makeClickableCurrentRow() {
+         $('.card-bus').each(function() {
+             var row = parseInt($(this).data("row"));
+             if (row == currentBusRow) {
+                 $(this).css({
+                     'opacity': 1,
+                     'cursor': 'pointer'
+                 });
+             } else {
+                 $(this).css({
+                     'opacity': 0.5,
+                     'cursor': 'auto'
+                 });
+             }
+         });
+     }
+
+     function makeClickableAllRows() {
+         $('.card-bus').each(function() {
+             $(this).css({
+                 'opacity': 1,
+                 'cursor': 'auto'
+             });
+         });
+     }
+
+     function coverAllCards() {
+         var src = `static/img/deck/back.png`;
+         $('.card-bus').each(function() {
+             $(this).removeClass("flip-scale-down-diag-2");
+             $(this).attr("src", src);
+         });
+         /*for (_id of flippedBusCards) {
+             _id = `#${_id}`;
+             $(_id).removeClass("flip-scale-down-diag-2");
+             setTimeout(function() {
+                 $(_id).attr("src", src);
+             }, 500 / 2);
+             $(_id).addClass("flip-scale-down-diag-2");
+         }*/
      }
 
      function disableButtons() {
@@ -446,10 +595,28 @@
          }
      }
 
+     function showBusCard(id) {
+         id = `#${id}`;
+         let src = `static/img/deck/${currentBusCard}.png`;
+         setTimeout(function() {
+             $(id).attr("src", src);
+         }, 500 / 2);
+         $(id).addClass("flip-scale-down-diag-2");
+     }
+
      $('#shareWhatsapp').click(function() {
          let text = `Hacemos una partida del juegodelbus.es? El código de sala es: *${room_number}*`;
          let href = "whatsapp://send?text=" + text;
          window.location.href = href;
+     });
+
+     $('#bus-button').click(function() {
+         if (loser == username){
+             send({
+                 'action': 'bus_sips_drunk'
+             });
+         }
+         $(this).attr('hidden', true);
      });
 
      $('#pre-bus-cards').click(function() {
@@ -458,9 +625,13 @@
                  'action': 'pre_bus_sips_drunk',
              });
              $('#pre-bus-cards').attr('hidden', true);
+         } else if (action == 'pre_bus_all_players_drunk') {
+             send({
+                 'action': 'start_bus'
+             });
          } else {
              send({
-                 'action': 'pre_bus_cards',
+                 'action': 'pre_bus_cards'
              });
          }
      });
@@ -499,6 +670,23 @@
          if (val > 0) {
              input.val(val - 1);
          }
+     });
+
+     function notifyOthersBusSelection() {
+         send({
+             'action': 'notify_bus_selection',
+             'card_id': currentBusCardId
+         });
+     }
+
+     $(document.body).on('click', '.card-bus', function() {
+         var row = parseInt($(this).data("row"));
+         if (row != currentBusRow || username != loser || currentBusCardFlipped) {
+             return
+         }
+         currentBusCardFlipped = true;
+         currentBusCardId = $(this).attr('id');
+         notifyOthersBusSelection();
      });
 
      $('#menu-create').on('click', function() {
