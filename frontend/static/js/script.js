@@ -1,6 +1,4 @@
  $(document).ready(function() {
-
-
      var username;
      var current_question = 0;
      var room_number;
@@ -141,6 +139,9 @@
      socket.onmessage = function(event) {
          let dataReceived = JSON.parse(event.data);
          action = dataReceived.action;
+         if (action == 'chao'){
+             somethingWentWrong();
+         }
          if (action == 'notify_players') {
              players = dataReceived.players;
              notifyPlayers(dataReceived.players);
@@ -370,10 +371,24 @@
          }
      };
 
+     function somethingWentWrong() {
+         $('#menu').attr('hidden', true);
+         $('#questions').attr('hidden', true);
+         $('#pre-bus').attr('hidden', true);
+         $('#pre').attr('hidden', true);
+         toggleAlert(
+             'Algo ha ido mal. Seguramente un participante ha salido de la sala.',
+             true
+         );
+         $('#something_went_wrong').attr('hidden', false);
+     }
+
      socket.onclose = function() {
+         somethingWentWrong();
          console.log('Lost connection!');
      };
      socket.onerror = function() {
+         somethingWentWrong();
          console.log('error');
      };
 
@@ -579,12 +594,17 @@
          return code;
      }
 
-     function toggleAlert(msg) {
+     function toggleAlert(msg, forever) {
+         if (forever == undefined) {
+             forever = false;
+         }
          $('#alert').html(msg);
          $('#alert').attr('hidden', false);
-         $("#alert").fadeTo(2000, 500).slideUp(500, function() {
-             $("#alert").slideUp(500);
-         });
+         if (!forever) {
+             $("#alert").fadeTo(2000, 500).slideUp(500, function() {
+                 $("#alert").slideUp(500);
+             });
+         }
      }
 
      function verifyUsername() {
@@ -734,7 +754,7 @@
          }));
      });
 
-     $('#new_game').click(function() {
+     $('.new_game').click(function() {
          window.location.href = "";
      });
 

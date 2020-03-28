@@ -12,6 +12,7 @@ import random
 from ratelimit import limits
 from math import ceil
 import operator
+from time import sleep
 
 
 class NoCardsLeftException(Exception):
@@ -51,8 +52,6 @@ class Game():
     def next_question(self, username, last_one_lost=False):
         if last_one_lost:
             self.sips[username]['received'] += 1 # TODO: fix this
-        print('-'*50)
-        print(self.turn_number)
         action = None
         if self.turn_number < self.n_players:
             self.question_id = 0
@@ -413,7 +412,6 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     #@limits(calls=1000, period=1)
     def notify_players_in_room(self, room, msg='test'):
-        print(msg)
         if msg == 'test':
             players = [p['username'] for p in self.rooms[room]['players']]
             msg = json.dumps({'action': 'notify_players', 'players': players})
@@ -425,6 +423,8 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         try:
+            if message == 'heartbeat':
+                return
             data = json.loads(message);
             action = data['action']
             room = data['room']
@@ -520,14 +520,25 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 )
 
         except Exception as e:
-            print('\n\nERROR')
-            print(e)
-            print('\n\n')
             log.exception(e)
-            raise
 
     def on_close(self):
-        log.info('Connection closed')
+        try:
+            room_to_close = None
+            for room_id, room in self.rooms.items():
+                for player in room['players']:
+                    if player['ws'] == self:
+                        room_to_close = room_id
+                        break
+            if room_to_close:
+                self.notify_players_in_room(
+                    room_to_close, {'action': 'chao'}
+                )
+                sleep(5);
+                self.close()
+                del self.rooms[room_id]
+        except Exception as e:
+            log.exception(e)
 
 
 if __name__ == "__main__":
