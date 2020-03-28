@@ -14,6 +14,9 @@ from math import ceil
 import operator
 
 
+class NoCardsLeftException(Exception):
+    pass
+
 log = logging.getLogger('')
 
 
@@ -88,16 +91,6 @@ class Game():
             btn_2_text = None
             btn_3_text = None
 
-        ### FAKE PART""
-        #if not self.player_cards[username]:
-        #    self.turn_number = 3* self.n_players
-        #    for i in range(3):
-        #        c = self._pick_random_card()
-        #        for u in self.players:
-        #            self.player_cards[u].append(c)
-        #action = 'pre_bus'
-
-        ###
         self._set_player_turn()
         to_return = {
             'action': action or 'show_turn',
@@ -118,6 +111,8 @@ class Game():
         return card[-1]
 
     def _pick_random_card(self):
+        if not self.remaining_cards:
+            raise NoCardsLeftException()
         card = random.choice(self.remaining_cards)
         self.remaining_cards.remove(card)
         return card
@@ -250,9 +245,11 @@ class Game():
             ]
             for card in self.pre_bus_cards:
                 num = self._get_number_from_card(card)
-                if num in prebus_player_numbers:
-                    player_cards_unrevealed[player] += 1
-                    prebus_player_numbers.remove(num)
+                times = prebus_player_numbers.count(num)
+                player_cards_unrevealed[player] += times
+                prebus_player_numbers = list(
+                    filter(lambda a: a != num, prebus_player_numbers)
+                )
 
         min_ = min(player_cards_unrevealed.values())
         for player, amount in player_cards_unrevealed.items():
@@ -359,7 +356,11 @@ class Game():
         self.remaining_cards = self.cards
 
     def next_bus_card(self):
-        card = self._pick_random_card()
+        try:
+            card = self._pick_random_card()
+        except NoCardsLeftException:
+            return self.win(no_cards_left=True)
+
         self.bus_cards.append(card)
         return {
             'action': 'next_bus_card',
@@ -380,11 +381,11 @@ class Game():
     #def _get_mvp(self):
     #    return max(stats.items(), key=operator.itemgetter(1))[0]
 
-    def win(self):
+    def win(self, no_cards_left=False):
         return {
             'action': 'notify_win',
             'stats': self.sips,
-            #'mvp': self._get_mvp()
+            'no_cards_left': no_cards_left
         }
 
     def add_player(self, username):

@@ -45,7 +45,17 @@
      }
 
      function getNumberOfCard(card) {
-         return parseInt(card.substring(0, card.length - 1));
+         var n = card.substring(0, card.length - 1);
+         if (n == 'J') {
+             return 11
+         } else if (n == 'Q') {
+             return 12
+         } else if (n == 'K') {
+             return 13
+         } else if (n == 'A') {
+             return 14
+         }
+         return parseInt(n);
      }
 
      function numbersCoincide(c1, c2) {
@@ -113,7 +123,7 @@
                  preBusDone()
              }
              n_unfolded_prebus_cards += 1;
-         }, 1000);
+         }, 3000);
      }
      socket.onopen = function() {
          console.log('Connected!');
@@ -338,9 +348,13 @@
                  //currentBusCardFlipped = false
                  currentBusRow = 0;
                  makeClickableCurrentRow();
-             }, 5000);
+             }, 2000);
          } else if (action == 'notify_win') {
-             var msg = `${loser} ha salido del bus!`;
+             if (dataReceived.no_cards_left) {
+                 var msg = `${loser} se ha acabado las cartas! Ha salido del bus.`;
+             } else {
+                 var msg = `${loser} ha salido del bus!`;
+             }
              $('#question-bus').html(msg);
              $('#bus-button').attr('hidden', true);
 
@@ -352,7 +366,7 @@
                  }
                  $('#stats-2').html(msg);
                  $('#stats').attr('hidden', false);
-             }, 2000);
+             }, 3000);
          }
      };
 
@@ -600,7 +614,7 @@
      });
 
      $('#bus-button').click(function() {
-         if (loser == username){
+         if (loser == username) {
              send({
                  'action': 'bus_sips_drunk'
              });
@@ -718,6 +732,10 @@
              'room': room_number,
              'username': username
          }));
+     });
+
+     $('#new_game').click(function() {
+         window.location.href = "";
      });
 
      $('#menu-start-game').click(function() {
