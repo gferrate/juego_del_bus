@@ -1,7 +1,7 @@
  $(document).ready(function() {
      var username;
      var current_question = 0;
-     var room_number;
+     var room_number = undefined;
      var players = [];
      var last_one_correct;
      var action = null;
@@ -35,6 +35,14 @@
      var acc_sips_user = 0;
      var navbar_cards = [];
      var used_pre_bus_sips = 0;
+
+     function getUrlVars() {
+         var vars = {};
+         var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m, key, value) {
+             vars[key] = value;
+         });
+         return vars;
+     }
 
      function scrollToTop() {
          window.scrollTo(0, 0);
@@ -675,7 +683,7 @@
      }
 
      $('#shareWhatsapp').click(function() {
-         let text = `Hacemos una partida del juegodelbus.es? El código de sala es: *${room_number}*`;
+         let text = `Hacemos una partida del juegodelbus.es?%0AEl código de sala es: *${room_number}*.%0ACópialo o dale click al siguiente enlace: juegodelbus.es?room=${room_number}`;
          let href = "whatsapp://send?text=" + text;
          window.location.href = href;
      });
@@ -759,6 +767,12 @@
          currentBusCardId = $(this).attr('id');
          notifyOthersBusSelection();
      });
+
+     var vars = getUrlVars();
+     if (vars['room'] != undefined) {
+         room_number = parseInt(vars['room']);
+         $('#menu-room-number').val(room_number);
+     }
 
      $('#menu-create').on('click', function() {
          if (!verifyUsername()) {
