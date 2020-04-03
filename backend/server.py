@@ -388,9 +388,13 @@ class Game():
         }
 
     def add_player(self, username):
-        if username in self.players:
-            raise Exception('Player already in room')
         self.players.append(username)
+        new_player = username
+        return {
+            'action': 'add_player',
+            'players': self.players,
+            'new_player': new_player,
+        }
 
     def start(self):
         self.n_players = len(self.players)
@@ -398,7 +402,6 @@ class Game():
         self.player_cards = {k: [] for k in self.players}
         self._set_player_turn()
         self.total_turns = 4 * self.n_players + 6 + 1
-
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -411,15 +414,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         log.info('Connection to client opened')
 
     #@limits(calls=1000, period=1)
-    def notify_players_in_room(self, room, msg='test'):
-        if msg == 'test':
-            players = [p['username'] for p in self.rooms[room]['players']]
-            msg = json.dumps({'action': 'notify_players', 'players': players})
-            for r in self.rooms[room]['players']:
-                r['ws'].write_message(msg)
-        else:
-            for r in self.rooms[room]['players']:
-                r['ws'].write_message(msg)
+    def notify_players_in_room(self, room, msg):
+        for r in self.rooms[room]['players']:
+            r['ws'].write_message(msg)
 
     def on_message(self, message):
         try:
@@ -436,13 +433,25 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                     'game': Game(),
                     'players': [{'ws': self, 'username': username}]
                 }
-                self.rooms[room]['game'].add_player(username)
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].add_player(username)
+                )
             elif action == 'join_room':
+                if room not in self.rooms:
+                    self.write_message({'action': 'room_does_not_exist'})
+                    return
+                players = [x['username'] for x in self.rooms[room]['players']]
+                if username in players:
+                    self.write_message(
+                        {'action': 'player_already_in_room', 'usr': username}
+                    )
+                    return
                 self.rooms[room]['players'].append(
                     {'ws': self, 'username': username}
                 )
-                self.notify_players_in_room(room)
-                self.rooms[room]['game'].add_player(username)
+                self.notify_players_in_room(
+                    room, self.rooms[room]['game'].add_player(username)
+                )
             elif action == 'send_message':
                 for r in self.rooms[room]['players']:
                     msg = json.dumps(data['msg'])

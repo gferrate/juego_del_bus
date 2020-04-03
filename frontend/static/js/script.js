@@ -2,7 +2,7 @@
      var username;
      var current_question = 0;
      var room_number;
-     var players;
+     var players = [];
      var last_one_correct;
      var action = null;
      var loser = null;
@@ -35,6 +35,13 @@
      var acc_sips_user = 0;
      var navbar_cards = [];
      var used_pre_bus_sips = 0;
+
+     function scrollToTop() {
+         window.scrollTo(0, 0);
+     }
+     setTimeout(function() {
+         scrollToTop();
+     }, 500);
 
      function diffuminateCardInNav(i) {
          var id = "#nav-card-" + i.toString();
@@ -143,12 +150,27 @@
          if (action == 'chao') {
              somethingWentWrong();
          }
-         if (action == 'notify_players') {
+         if (action == 'add_player') {
              players = dataReceived.players;
              notifyPlayers(dataReceived.players);
+             if (dataReceived.new_player != username) {
+                 toggleAlert(`${dataReceived.new_player} se ha unido!`, false, true);
+             }
+         } else if (action == 'player_already_in_room') {
+             toggleAlert(`El jugador ${dataReceived.usr} ya está en la sala`);
+             setTimeout(function() {
+                 window.location.href = "";
+             }, 500);
+         } else if (action == 'room_does_not_exist') {
+             $('#waiting-players').attr('hidden', true);
+             toggleAlert('La sala no existe');
+             setTimeout(function() {
+                 window.location.href = "";
+             }, 500);
          } else if (action == 'show_turn') {
              current_question = dataReceived.question_id;
              $('#menu').attr('hidden', true);
+             $('#waiting-players').attr('hidden', true);
              $('#questions').attr('hidden', false);
              $('#answer-0').html(dataReceived.btn_0_text);
              $('#answer-1').html(dataReceived.btn_1_text);
@@ -205,7 +227,7 @@
                      //
                  }
              }
-         } else if (action == 'notify_players') {
+         } else if (action == 'add_player') {
              players = dataReceived.players;
          } else if (action == 'answered') {
              //pass
@@ -598,15 +620,23 @@
          return code;
      }
 
-     function toggleAlert(msg, forever) {
+     function toggleAlert(msg, forever, green) {
          if (forever == undefined) {
              forever = false;
          }
-         $('#alert').html(msg);
-         $('#alert').attr('hidden', false);
+         if (green == undefined) {
+             green = false;
+         }
+         if (green) {
+             var alert_id = '#green-alert';
+         } else {
+             var alert_id = '#alert';
+         }
+         $(alert_id).html(msg);
+         $(alert_id).attr('hidden', false);
          if (!forever) {
-             $("#alert").fadeTo(2000, 500).slideUp(500, function() {
-                 $("#alert").slideUp(500);
+             $(alert_id).fadeTo(2000, 500).slideUp(500, function() {
+                 $(alert_id).slideUp(500);
              });
          }
      }
@@ -725,13 +755,12 @@
          $('#menu-content-init').attr('hidden', true);
          $('#code').html(room_number);
          $('#menu-content-create').attr('hidden', false);
+         scrollToTop();
          $('#menu').removeClass('menu-w-1');
          $('#nav-username').html(username);
-         socket.send(JSON.stringify({
-             'action': 'create_room',
-             'room': room_number,
-             'username': username
-         }));
+         send({
+             'action': 'create_room'
+         });
      });
 
      $('#menu-join').click(function() {
@@ -740,6 +769,7 @@
          }
          $('#menu-content-init').attr('hidden', true);
          $('#menu-content-create').attr('hidden', true);
+         scrollToTop();
          $('#menu-content-join').attr('hidden', false);
          $('#nav-username').html(username);
      });
@@ -751,11 +781,10 @@
              return
          }
          $('#menu').attr('hidden', true);
-         socket.send(JSON.stringify({
-             'action': 'join_room',
-             'room': room_number,
-             'username': username
-         }));
+         $('#waiting-players').attr('hidden', false);
+         send({
+             'action': 'join_room'
+         });
      });
 
      $('.new_game').click(function() {
@@ -763,6 +792,10 @@
      });
 
      $('#menu-start-game').click(function() {
+         if (players.length <= 1) {
+             toggleAlert('Aún no hay ningún jugador en la sala');
+             return
+         }
          $('#menu').attr('hidden', true);
          send({
              'action': 'start_game'
