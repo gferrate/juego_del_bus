@@ -243,7 +243,7 @@
                  if (turn == username) {
                      showNButtons(1);
                      enableButtons();
-                     $('#answer-0').html('Sorbo(s) bebido(s). Continuar');
+                     $('#answer-0').html('Sorbo bebido. Continuar');
                  } else {
                      //
                  }
