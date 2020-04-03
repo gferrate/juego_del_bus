@@ -24,6 +24,7 @@ log = logging.getLogger('')
 class Game():
 
     def __init__(self):
+        self.started = False
         self.players = []
         self.n_players = 0
         self.sips = {}
@@ -389,14 +390,15 @@ class Game():
 
     def add_player(self, username):
         self.players.append(username)
-        new_player = username
         return {
             'action': 'add_player',
             'players': self.players,
-            'new_player': new_player,
+            'new_player': username,
+            'max_players': True if len(self.players) >= 6 else False
         }
 
     def start(self):
+        self.started = True
         self.n_players = len(self.players)
         self.sips = {k: {'sent': 0, 'received': 0}  for k in self.players}
         self.player_cards = {k: [] for k in self.players}
@@ -444,6 +446,14 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 if username in players:
                     self.write_message(
                         {'action': 'player_already_in_room', 'usr': username}
+                    )
+                    return
+                if self.rooms[room]['game'].started:
+                    self.write_message({'action': 'game_has_started'})
+                    return
+                if len(players) == 6:
+                    self.write_message(
+                        {'action': 'max_players_reached', 'usr': username}
                     )
                     return
                 self.rooms[room]['players'].append(

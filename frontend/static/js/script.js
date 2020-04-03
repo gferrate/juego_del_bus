@@ -152,10 +152,23 @@
          }
          if (action == 'add_player') {
              players = dataReceived.players;
+             if (dataReceived.max_players) {
+                 toggleAlert('Número máximo de jugadores alcanzado. Anfitrión, empieza la partida!');
+             }
              notifyPlayers(dataReceived.players);
              if (dataReceived.new_player != username) {
                  toggleAlert(`${dataReceived.new_player} se ha unido!`, false, true);
              }
+         } else if (action == 'game_has_started') {
+             toggleAlert(`Lo siento, la partida ya ha epezado`);
+             setTimeout(function() {
+                 window.location.href = "";
+             }, 500);
+         } else if (action == 'max_players_reached') {
+             toggleAlert(`Lo siento, ya se ha llegado al límite de usuarios en esta sala.`);
+             setTimeout(function() {
+                 window.location.href = "";
+             }, 500);
          } else if (action == 'player_already_in_room') {
              toggleAlert(`El jugador ${dataReceived.usr} ya está en la sala`);
              setTimeout(function() {
