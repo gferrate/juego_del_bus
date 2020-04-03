@@ -683,7 +683,7 @@
      }
 
      $('#shareWhatsapp').click(function() {
-         let text = `Hacemos una partida del juegodelbus.es?%0AEl código de sala es: *${room_number}*.%0ACópialo o dale click al siguiente enlace: juegodelbus.es?room=${room_number}`;
+         let text = `Hacemos una partida del juegodelbus.es?%0AEl código de sala es: *${room_number}*.%0ACópialo o dale click al siguiente enlace: juegodelbus.es/?room=${room_number}`;
          let href = "whatsapp://send?text=" + text;
          window.location.href = href;
      });
