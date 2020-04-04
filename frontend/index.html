@@ -18,7 +18,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="static/img/favicon/favicon-16x16.png">
     <link rel="manifest" href="static/img/site.webmanifest">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no">
     <meta charset="UTF-8">
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
 
@@ -33,7 +33,8 @@
     <script src="static/js/jquery.min.js"></script>
     <script src="static/js/input-spinner.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
         crossorigin="anonymous">
@@ -83,13 +84,17 @@
 
         <div hidden id="alert" class="alert alert-danger menu-w-1 h-center mb-4" role="alert">
         </div>
-        <div hidden id="green-alert" class="alert alert-success menu-w-1 h-center mb-4" role="alert">
+        <div hidden id="green-alert" class="alert alert-success menu-w-1 h-center mb-4"
+            role="alert">
+        </div>
+        <div class="d-flex justify-content-center flex-row w-100 mt-2">
+            <button id="something_went_wrong" type="button" class="btn btn-dark mt-3 new_game"
+                hidden>Juega otra partida</button>
         </div>
         <div id="waiting-players" class="menu h-center v-center menu-w-1" hidden>
             <h1>Esperando a los demás jugadores <i class="fas fa-glass-cheers"></i></h1>
-        </div>
-        <div  class="d-flex justify-content-center flex-row w-100 mt-2" >
-            <button id="something_went_wrong" type="button" class="btn btn-dark mt-3 new_game" hidden>Juega otra partida</button>
+            </br>
+            <img id="waiting-img" src="static/img/waiting_gifs/gif_1.gif" class="img-fluid h-center">
         </div>
         <div id="menu" class="menu h-center v-center menu-w-1">
             <img src="static/img/bus_logo.png" width="280px" class="img-fluid h-center">
@@ -105,10 +110,10 @@
             </div>
             <div id="menu-content-create" hidden>
                 <h1>Código: <a id="code"></a></h1>
-                <h1>Esperando a jugadores...
-                    <h1>
-                        <button id="menu-start-game" type="button" class="btn btn-dark">Empezar</button>
-                        <button id="shareWhatsapp" type="button" class="btn btn-dark ml-1" data-action="share/whatsapp/share">
+                <h1>Esperando a jugadores...</h1>
+                <h1>Máximo: 11</h1>
+                <button id="menu-start-game" type="button" class="btn btn-dark">Empezar</button>
+                <button id="shareWhatsapp" type="button" class="btn btn-dark ml-1" data-action="share/whatsapp/share">
                     Invita por 
                     <i class="fab fa-whatsapp ml-1" aria-hidden="true"></i> </button>
             </div>
@@ -228,12 +233,14 @@
         <div id="stats" class="h-center v-center-2 text-center mt-1" hidden>
             <h1 id="stats" class="">Estadísticas:</h1>
             </br>
-            <h1 id="stats-2" class=""></h1>
-            </br>
-            <h1 class="">Vaya pedo...</h1>
+            <h2 id="stats-2" class=""></h2>
             </br>
             </br>
             <h1 class="">Si te ha gustado el juego considera regalarme una cerveza! Gracias!</h1>
+            </br>
+            <img src="static/img/verse_logo.png" class="donate-verse" onclick="window.open('https://verse.me/pay?to=2jqcn07vbl9rvbufopvg');"
+            />
+            </br>
             </br>
             <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
                 <input type="hidden" name="cmd" value="_s-xclick" />
@@ -245,11 +252,11 @@
                     height="1" />
             </form>
             <div class="d-flex justify-content-center flex-row w-100 mt-2">
-                <button type="button" class="btn btn-dark mt-3 new_game" >Juega otra partida</button>
+                <button type="button" class="btn btn-dark mt-3 new_game">Juega otra partida</button>
             </div>
             </br>
             </br>
-            <h1 class="">© 2020 - Gabriel Ferraté</h1>
+            <h2>© 2020 - Gabriel Ferraté</h2>
         </div>
     </div>
 </body>

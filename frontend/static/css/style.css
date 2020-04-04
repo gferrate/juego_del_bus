@@ -13,7 +13,7 @@ body {
     animation: bg-color 30s infinite ease-in-out
 }
 
-.navbar{
+.navbar {
     animation: bg-color 30s infinite ease-in-out
 }
 
@@ -30,10 +30,9 @@ body {
     margin: auto;
 }
 
-.testt > *{
-  display: inline-block;
+.testt>* {
+    display: inline-block;
 }
-
 
 .v-center {
     margin-top: 15vh;
@@ -63,6 +62,12 @@ body {
 
 .btn-width {
     width: 8rem;
+}
+
+.donate-verse {
+    width: 11rem;
+    height: auto;
+    cursor: pointer;
 }
 
 @keyframes bg-color {

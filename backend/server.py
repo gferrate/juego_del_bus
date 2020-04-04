@@ -2,21 +2,18 @@ import tornado.httpserver
 import tornado.websocket
 import tornado.ioloop
 import tornado.web
-from tornado.ioloop import IOLoop
-from tornado import gen
-from tornado.websocket import websocket_connect
 import ssl
 import json
 import logging
 import random
 from ratelimit import limits
 from math import ceil
-import operator
 from time import sleep
 
 
 class NoCardsLeftException(Exception):
     pass
+
 
 log = logging.getLogger('')
 
@@ -27,10 +24,10 @@ class Game():
         self.started = False
         self.players = []
         self.n_players = 0
+        self.n_players_out = 0
         self.sips = {}
         self.turn_number = 0
         self.question_id = None
-        self.total_turns = None
         self.turn = None
         self.cards = [
             '10C', '10D', '10H', '10S', '2C', '2D', '2H', '2S', '3C', '3D',
@@ -44,6 +41,7 @@ class Game():
         self.pre_bus_cards = []
         self.pre_bus_sips_sent = {}
         self.pre_bus_players_drunk = []
+        self.bus_has_started = False
         self.bus_loser = None
         self.bus_cards = []
 
@@ -186,7 +184,7 @@ class Game():
             msg_2 = None
             msg_others = f'Incorrecto, {self.turn} bebe un sorbo'
             msg_others_2 = 'Esperando a que se lo beba...'
-        to_return = {
+        return {
             'action': 'answer_action',
             'card': card,
             'turn': self.turn,
@@ -198,13 +196,14 @@ class Game():
             'msg_others_2': msg_others_2,
             'players': self.players
         }
-        return to_return
 
     def send_sip(self, username, to, amount):
         self.sips[username]['sent'] += amount
         self.sips[to]['received'] += amount
         msg = f'Bebes {amount} sorbo'
         ans = 'Sorbo bebido. Continuar.'
+        msg_others = f'Se lo ha enviado a {to}!'
+        msg_others_2 = f'Esperando a que se lo beba...'
         if amount > 1:
             msg += 's'
             ans = 'Sorbos bebidos. Continuar.'
@@ -212,6 +211,8 @@ class Game():
             'action': 'notify_sip',
             'victim': to,
             'msg': msg,
+            'msg_others': msg_others,
+            'msg_others_2': msg_others_2,
             'ans': ans
         }
         return to_return
@@ -227,7 +228,7 @@ class Game():
                 to_send[player][_round] = 0
                 for c in prebus_player_cards:
                     if (self._get_number_from_card(c) ==
-                            self._get_number_from_card(card) and (not c in a)):
+                            self._get_number_from_card(card) and (c not in a)):
                         to_send[player][_round] += ceil((_round+1)/2)
                         a.append(c)
                 _round += 1
@@ -238,7 +239,6 @@ class Game():
         # TODO: Classifaction for this
         player_cards_unrevealed = {p: 0 for p in self.players}
         for player in self.players:
-            prebus_player_cards = self.player_cards[player]
             prebus_player_numbers = [
                 self._get_number_from_card(c) for c in
                 self.player_cards[player]
@@ -258,7 +258,6 @@ class Game():
                 return
 
     def calculate_pre_bus_cards(self):
-
         for i in range(8):
             card = self._pick_random_card()
             self.pre_bus_cards.append(card)
@@ -313,7 +312,6 @@ class Game():
             self.sips[username]['sent'] += amount
             self.sips[to]['received'] += amount
         if self._all_pre_bus_sips_sent():
-            unified_sips = self._get_unified_pre_bus_sips()
             return {
                 'action': 'drink_pre_bus_sips',
                 'unified_sips': self._get_unified_pre_bus_sips()
@@ -368,6 +366,7 @@ class Game():
         }
 
     def start_bus(self):
+        self.bus_has_started = True
         self._mix_cards()
         return self.next_bus_card()
 
@@ -378,9 +377,6 @@ class Game():
             'sips_to_drink': sips_to_drink,
         }
 
-    #def _get_mvp(self):
-    #    return max(stats.items(), key=operator.itemgetter(1))[0]
-
     def win(self, no_cards_left=False):
         return {
             'action': 'notify_win',
@@ -390,20 +386,24 @@ class Game():
 
     def add_player(self, username):
         self.players.append(username)
+        self.n_players = len(self.players)
         return {
             'action': 'add_player',
             'players': self.players,
             'new_player': username,
-            'max_players': True if len(self.players) >= 6 else False
+            'max_players': True if len(self.players) >= 11 else False
         }
+
+    def remove_player(self, username):
+        self.players.remove(username)
+        self.n_players = len(self.players)
 
     def start(self):
         self.started = True
         self.n_players = len(self.players)
-        self.sips = {k: {'sent': 0, 'received': 0}  for k in self.players}
+        self.sips = {k: {'sent': 0, 'received': 0} for k in self.players}
         self.player_cards = {k: [] for k in self.players}
         self._set_player_turn()
-        self.total_turns = 4 * self.n_players + 6 + 1
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -418,13 +418,16 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     #@limits(calls=1000, period=1)
     def notify_players_in_room(self, room, msg):
         for r in self.rooms[room]['players']:
-            r['ws'].write_message(msg)
+            try:
+                r['ws'].write_message(msg)
+            except:
+                continue
 
     def on_message(self, message):
         try:
             if message == 'heartbeat':
                 return
-            data = json.loads(message);
+            data = json.loads(message)
             action = data['action']
             room = data['room']
             username = data['username']
@@ -451,7 +454,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 if self.rooms[room]['game'].started:
                     self.write_message({'action': 'game_has_started'})
                     return
-                if len(players) == 6:
+                if len(players) == 11:
                     self.write_message(
                         {'action': 'max_players_reached', 'usr': username}
                     )
@@ -544,18 +547,45 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         try:
             room_to_close = None
+            username = None
             for room_id, room in self.rooms.items():
                 for player in room['players']:
                     if player['ws'] == self:
                         room_to_close = room_id
+                        username = player['username']
                         break
             if room_to_close:
-                self.notify_players_in_room(
-                    room_to_close, {'action': 'chao'}
-                )
-                sleep(5);
-                self.close()
-                del self.rooms[room_id]
+                self.rooms[room_to_close]['game'].n_players_out += 1
+                n = self.rooms[room_to_close]['game'].n_players
+                bus_has_started = self.rooms[room_to_close]['game'].bus_has_started
+                if not bus_has_started or n == 1:
+                    if n > 1 and username:
+                        for i in range(len(self.rooms[room_to_close]['players'])):
+                            if self.rooms[room_to_close]['players'][i]['ws'] == self:
+                                del self.rooms[room_to_close]['players'][i]
+                                break
+                        players = [
+                            p['username'] for p in
+                            self.rooms[room_to_close]['players']
+                        ]
+                        self.rooms[room_to_close]['game'].remove_player(
+                            username
+                        )
+                        self.notify_players_in_room(
+                            room_to_close,
+                            {
+                                'player_out': True,
+                                'player': username,
+                                'players': players
+                            }
+                        )
+                    else:
+                        self.notify_players_in_room(
+                            room_to_close, {'action': 'chao'}
+                        )
+                        sleep(5);
+                        #self.close()
+                        del self.rooms[room_to_close]
         except Exception as e:
             log.exception(e)
 

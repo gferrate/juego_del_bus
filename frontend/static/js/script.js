@@ -5,6 +5,7 @@
      var players = [];
      var last_one_correct;
      var action = null;
+     var prev_action = null;
      var loser = null;
      var game_has_finished = false;
      var currentBusRow = 0;
@@ -152,8 +153,19 @@
              'trigger': 'manual'
          });
      }*/
+     function reloadIn(ms) {
+         setTimeout(function() {
+             window.location.href = "";
+         }, ms);
+     }
      socket.onmessage = function(event) {
          let dataReceived = JSON.parse(event.data);
+         if (dataReceived.player_out) {
+             toggleAlert(`${dataReceived.player} se ha ido de la sala`);
+             players = dataReceived.players;
+             notifyPlayers(players);
+             return
+         }   
          action = dataReceived.action;
          if (action == 'chao') {
              somethingWentWrong();
@@ -161,7 +173,7 @@
          if (action == 'add_player') {
              players = dataReceived.players;
              if (dataReceived.max_players) {
-                 toggleAlert('Número máximo de jugadores alcanzado. Anfitrión, empieza la partida!');
+                 toggleAlert('Número máximo de jugadores alcanzado (11). Anfitrión, empieza la partida!');
              }
              notifyPlayers(dataReceived.players);
              if (dataReceived.new_player != username) {
@@ -169,25 +181,17 @@
              }
          } else if (action == 'game_has_started') {
              toggleAlert(`Lo siento, la partida ya ha epezado`);
-             setTimeout(function() {
-                 window.location.href = "";
-             }, 500);
+             reloadIn(2000);
          } else if (action == 'max_players_reached') {
              toggleAlert(`Lo siento, ya se ha llegado al límite de usuarios en esta sala.`);
-             setTimeout(function() {
-                 window.location.href = "";
-             }, 500);
+             reloadIn(2000);
          } else if (action == 'player_already_in_room') {
              toggleAlert(`El jugador ${dataReceived.usr} ya está en la sala`);
-             setTimeout(function() {
-                 window.location.href = "";
-             }, 500);
+             reloadIn(2000);
          } else if (action == 'room_does_not_exist') {
              $('#waiting-players').attr('hidden', true);
              toggleAlert('La sala no existe');
-             setTimeout(function() {
-                 window.location.href = "";
-             }, 500);
+             reloadIn(2000);
          } else if (action == 'show_turn') {
              current_question = dataReceived.question_id;
              $('#menu').attr('hidden', true);
@@ -809,6 +813,9 @@
          }
          $('#menu').attr('hidden', true);
          $('#waiting-players').attr('hidden', false);
+         let rnd_num = Math.floor(Math.random() * 10) + 1;
+         let src = `static/img/waiting_gifs/gif_${rnd_num}.gif`;
+         $('#waiting-img').attr('src', src);
          send({
              'action': 'join_room'
          });
